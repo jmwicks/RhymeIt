@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RhymeIt</title>
+</head>
+<body>
+    <h1>RhymeIt</h1>
+    <p>Find the original words for the given synonyms:</p>
+    <p>Synonyms of word 1:
+        {% for synonym in synonyms_word1 %}
+            {{ synonym }}
+            {% if not loop.last %},{% endif %}
+        {% endfor %}
+    </p>
+    <p>Synonyms of word 2:
+        {% for synonym in synonyms_word2 %}
+            {{ synonym }}
+            {% if not loop.last %},{% endif %}
+        {% endfor %}
+    </p>
+    <form action="/check_guess" method="post">
+        <label for="user_input1">First word:</label><br>
+        <input type="text" id="user_input1" name="user_input1" required><br>
+        <label for="user_input2">Second word:</label><br>
+        <input type="text" id="user_input2" name="user_input2" required><br>
+        <input type="hidden" name="word1" value="{{ word1 }}">
+        <input type="hidden" name="word2" value="{{ word2 }}">
+        <br>
+        <button type="submit">Submit</button>
+    </form>
+</body>
+</html>
