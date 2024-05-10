@@ -243,7 +243,7 @@ def check_guess():
         return render_template('incorrect_guess.html')
 
 
-if __name__ == "__app__":
+if __name__ == "__main__":
     app.run(debug=True)
 
 #add instructions?
