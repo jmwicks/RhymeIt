@@ -1,5 +1,2 @@
-love:affection,passion,devotion
-above:over,higher,up
-
 stone:rock,boulder
 throne:chair,seat
