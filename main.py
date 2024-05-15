@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for
 import random
 import os
-
+#THIS IS UPDATED
 app = Flask(__name__)
 
 # File paths
