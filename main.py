@@ -5,10 +5,11 @@ import os
 app = Flask(__name__)
 
 # File paths
-word_pairs_file = "word_pairs.txt"
-used_word_pairs_file = "used_word_pairs.txt"
-synonyms_file = "synonyms.txt"
-used_synonyms_file = "used_synonyms.txt"
+txt_folder = "txt files"
+word_pairs_file = os.path.join(txt_folder, "word_pairs.txt")
+used_word_pairs_file = os.path.join(txt_folder, "used_word_pairs.txt")
+synonyms_file = os.path.join(txt_folder, "synonyms.txt")
+used_synonyms_file = os.path.join(txt_folder, "used_synonyms.txt")
 
 
 def load_word_pair():
@@ -185,7 +186,7 @@ def get_hint():
 
 def load_word_pair_from_synonyms():
     try:
-        with open("synonyms.txt", "r") as file:
+        with open(os.path.join(txt_folder, "synonyms.txt"), "r") as file:
             lines = file.readlines()
             if lines:
                 # Choose a random line (word pair) from the file

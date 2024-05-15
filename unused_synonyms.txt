@@ -1,6 +1,0 @@
-love:affection,passion,devotion
-above:over,higher,up
-blue:azure,sapphire,navy
-true:accurate,correct,genuine
-
-#have different difficulties?

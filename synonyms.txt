@@ -1,2 +1,0 @@
-stone:rock,boulder
-throne:chair,seat
