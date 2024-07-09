@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+    <h2>Welcome, {{ user.username }}!</h2>
+    <p>Your puzzle stats:</p>
+    <ul>
+        {% for stat in user.stats %}
+            <li>Date: {{ stat.date }}, Solved: {{ stat.puzzles_solved }}, Failed: {{ stat.puzzles_failed }}</li>
+        {% endfor %}
+    </ul>
+    <a href="{{ url_for('logout') }}">Logout</a>
+{% endblock %}

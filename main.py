@@ -1,8 +1,8 @@
-from flask import Flask, render_template, request, redirect, url_for
 import random
 import os
-#THIS IS UPDATED
-app = Flask(__name__)
+from app import app
+
+#UPDATE WITH LOGIN
 
 # File paths
 txt_folder = "txt files"
@@ -167,22 +167,6 @@ def rhyming_game():
             else:
                 print("Invalid choice. Please enter 1 or 2.")
 
-@app.route('/get_hint')
-def get_hint():
-    word_pair = load_word_pair()
-
-    if not word_pair:
-        return render_template('game_over.html')
-
-    word1, word2 = word_pair
-    synonyms_dict = load_synonyms()
-
-    # Get both synonyms for the chosen words
-    synonyms_word1 = synonyms_dict.get(word1, ["No synonyms found"])
-    synonyms_word2 = synonyms_dict.get(word2, ["No synonyms found"])
-
-    return render_template('second_play.html', word1=word1, word2=word2, synonyms_word1=synonyms_word1, synonyms_word2=synonyms_word2)
-
 
 def load_word_pair_from_synonyms():
     try:
@@ -204,47 +188,14 @@ def load_word_pair_from_synonyms():
     # Return None if there was an error or not enough words
     return None
 
-
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-@app.route('/play', methods=['POST', 'GET'])
-def play():
-    word_pair = load_word_pair()
-
-    if not word_pair:
-        return render_template('game_over.html')
-
-    word1, word2 = word_pair
-    synonyms_dict = load_synonyms()
-
-    # Get the first synonym of each word
-    synonym_word1 = synonyms_dict.get(word1, ["No synonyms found"])[0]
-    synonym_word2 = synonyms_dict.get(word2, ["No synonyms found"])[0]
-
-    return render_template('play.html', word1=word1, word2=word2, synonym_word1=synonym_word1, synonym_word2=synonym_word2)
-
-@app.route('/check_guess', methods=['POST'])
-def check_guess():
-    user_input1 = request.form.get('user_input1', '').strip().lower()
-    user_input2 = request.form.get('user_input2', '').strip().lower()
-    word1 = request.form.get('word1', '')
-    word2 = request.form.get('word2', '')
-
-    word_pair = (word1, word2)  # Define word_pair here
-
-    if user_input1 == word1 and user_input2 == word2:
-        move_word_pair_to_used((word1, word2))
-        move_synonyms_to_used(word_pair, load_synonyms())  # Move synonyms to used_synonyms.txt
-        remove_synonyms_from_file(word_pair)
-        remove_word_pair_from_file((word1, word2))
-        return render_template('correct_guess.html')
-    else:
-        return render_template('incorrect_guess.html')
-
-
 if __name__ == "__main__":
     app.run(debug=True)
 
 #add instructions?
+
+#Where to start today:
+#Added login and register, but they don't seem to work. Need to make sure the database is initialized upon start
+#Get login and register to work (check forms?)
+#Fix formatting for the pages (maybe they're not pointing to the styles.css form correctly?)
+#Update requirements file
+#Need to add site.db files to Git
