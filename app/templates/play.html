@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RhymeIt</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .content-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .progress-container {
+            width: 100%;
+            background-color: #f3f3f3;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .progress-bar {
+            height: 20px;
+            color: white;
+            text-align: center;
+            line-height: 20px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .progress-bar.green {
+            background-color: #4caf50; /* Green for 3 guesses */
+            width: 100%;
+        }
+
+        .progress-bar.yellow {
+            background-color: #ffeb3b; /* Yellow for 2 guesses */
+            color: #000; /* Black text for better readability */
+            width: 67%;
+        }
+
+        .progress-bar.red {
+            background-color: #f44336; /* Red for 1 guess */
+            width: 33%;
+        }
+
+        .form-container {
+            margin-bottom: 20px;
+        }
+
+        form {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin: 10px 0 5px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .buttons-container .btn {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="content-container">
+        <h1>RhymeIt</h1>
+        <p>Find the rhyming words for the given synonyms:</p>
+        <p>Synonym of word 1: {{ synonym_word1 }}</p>
+        <p>Synonym of word 2: {{ synonym_word2 }}</p>
+
+        <!-- Display Progress Bar -->
+        <div class="progress-container">
+            <div class="progress-bar {{ 'green' if attempts == 3 else 'yellow' if attempts == 2 else 'red' }}">
+                Chances: {{ attempts }}
+            </div>
+        </div>
+
+        {% if form.errors %}
+            <h2>One or both of your guesses are incorrect!</h2>
+            <form action="{{ url_for('auth.get_hint') }}" method="get">
+                <button type="submit" class="btn btn-warning w-100">No luck? Try with two synonyms</button>
+            </form>
+        {% endif %}
+
+        <div class="form-container">
+            <form action="{{ url_for('auth.play') }}" method="post">
+                {{ form.hidden_tag() }}
+                <label for="user_input1">First word:</label>
+                <input type="text" id="user_input1" name="user_input1" required>
+
+                <label for="user_input2">Second word:</label>
+                <input type="text" id="user_input2" name="user_input2" required>
+
+                <input type="hidden" name="word1" value="{{ word1 }}">
+                <input type="hidden" name="word2" value="{{ word2 }}">
+                <input type="hidden" name="hints_used" value="{{ hints_used | default(0) }}">
+
+                <button class="btn btn-primary w-100">Submit</button>
+            </form>
+        </div>
+
+        <!-- Buttons vertically stacked below the form -->
+        <div class="buttons-container">
+            <a href="{{ url_for('auth.dashboard') }}" class="btn btn-info text-white w-100">Go to Dashboard</a>
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-danger w-100">Logout</a>
+        </div>
+    </div>
+
+    <!-- Optional: Bootstrap JS (for any interactive components) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kaKTk0XPO7kM8qWkM+TmA7CvZ9ZX4Q9tkjOHqUjHl0cG7p8+2LqF4oG4I8L05X3a" crossorigin="anonymous"></script>
+</body>
+</html>

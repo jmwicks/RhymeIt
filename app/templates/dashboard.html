@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+    <div class="content-container">
+        <h2>Welcome, {{ user.username }}!</h2>
+
+        <p>Your Puzzle Stats:</p>
+        <ul class="dashboard-stats">
+            <li>Total Points: {{ user.total_points }}</li>
+            <li>Current Streak: {{ user.current_streak }} days</li>
+            <li>Max Streak: {{ user.max_streak }} days</li>
+        </ul>
+
+        <h3>Recent Games:</h3>
+        <ul>
+            {% for stat in user.stats %}
+                <li>Date: {{ stat.date }},
+                    Solved: {{ stat.puzzles_solved }},
+                    Failed: {{ stat.puzzles_failed }},
+                    Points Earned: {{ stat.points_earned }}
+                </li>
+            {% endfor %}
+        </ul>
+
+        <div class="d-flex flex-column mt-4">
+            <a href="{{ url_for('auth.play') }}" class="btn btn-primary mb-2">Play</a>
+            <button type="button" class="btn btn-secondary mb-2" data-bs-toggle="modal" data-bs-target="#howToPlayModal">How to Play</button>
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-danger">Logout</a>
+            <p class="contact-info">To provide feedback, suggestions, comments, concerns, or joy, email me at
+                <a href="mailto:rhyme.it.manager@gmail.com">rhyme.it.manager@gmail.com</a>.</p>
+</div>
+
+
+        <!-- Modal for instructions -->
+        <div class="modal fade" id="howToPlayModal" tabindex="-1" aria-labelledby="howToPlayModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="howToPlayModalLabel">How to Play</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Welcome to Rhyme It! Here’s how to play:</p>
+                        <ul class="instructions-list">
+                            <li>You will be presented with a synonym for each of the two target words.
+                                Your goal is to guess the original two words based on the synonyms.</li><br>
+                            <li>If you guess correctly without any hints, you earn 2 points.</li>
+                            <li>If you request a second pair of synonyms and then guess correctly, you earn 1 point.</li>
+                            <li>You have a total of 3 attempts per day to guess the words.</li><br>
+                            <li>For example:</li>
+                            <li>Synonym 1: Rock</li>
+                            <li>Synonym 2: Chair</li>
+                            <li>Answer: Stone Throne</li>
+                        </ul>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

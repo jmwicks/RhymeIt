@@ -2,11 +2,14 @@ import os
 
 class Config:
     # Database configuration
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///your_database.db'
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(os.path.abspath(os.path.dirname(__file__)), 'instance',
+                                'site.db') + '?timeout=10'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # Secret key for CSRF protection and session management
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'mauGO9eK66xpitdLL7tRvp2x2v2LoGku'
+    SECURITY_PASSWORD_SALT = os.environ.get('SECURITY_PASSWORD_SALT', 'a_default_salt')
+    WTF_CSRF_ENABLED = True
 
     # Debug mode setting
     DEBUG = True
