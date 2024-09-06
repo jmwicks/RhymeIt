@@ -16,7 +16,7 @@ class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
     email = db.Column(db.String(250), unique=True, nullable=False)
-    password_hash = db.Column(db.String(128), nullable=False)
+    password_hash = db.Column(db.String(256), nullable=False)
     total_points = db.Column(db.Integer, default=0)
     current_streak = db.Column(db.Integer, default=0)
     max_streak = db.Column(db.Integer, default=0)
@@ -108,14 +108,7 @@ class UserWordPair(db.Model):
     word_pair = db.relationship('WordPair', back_populates='user_word_pairs')
 
 
-class Synonym(db.Model):
-    __tablename__ = 'synonym'
-    id = db.Column(db.Integer, primary_key=True)
-    word = db.Column(db.String(100), nullable=False, unique=True)
-    synonyms = db.Column(db.Text, nullable=False)  # Storing synonyms as a comma-separated string
 
-    def __repr__(self):
-        return f'<Synonym {self.word}>'
 
 class UserStats(db.Model):
     id = db.Column(db.Integer, primary_key=True)

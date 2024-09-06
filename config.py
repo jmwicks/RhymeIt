@@ -2,8 +2,8 @@ import os
 
 class Config:
     # Database configuration
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(os.path.abspath(os.path.dirname(__file__)), 'instance',
-                                'site.db') + '?timeout=10'
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
+                              'postgresql://wicksjm:Ilvbbaicnl1!@localhost:5432/postgres'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # Secret key for CSRF protection and session management

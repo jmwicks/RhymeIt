@@ -37,6 +37,7 @@ def test_db():
 def register():
     form = RegistrationForm()
     if form.validate_on_submit():
+        print("Form is valid. Username and email checks passed.")
         username = form.username.data
         email = form.email.data
         password = form.password.data
@@ -187,6 +188,8 @@ def get_hint():
 
 
 
+from datetime import datetime
+
 @bp.route('/play', methods=['POST', 'GET'])
 @login_required
 def play():
@@ -199,7 +202,12 @@ def play():
     if last_guess_date == today or last_incorrect_guess_date == today:
         return render_template('already_guessed.html')
 
-    available_word_pairs = UserWordPair.query.filter_by(user_id=user_id, used=False).all()
+    # Fetch only word pairs available today and not yet used
+    available_word_pairs = UserWordPair.query.join(WordPair).filter(
+        UserWordPair.user_id == user_id,
+        UserWordPair.used == False,
+        WordPair.date_available == today
+    ).all()
 
     if not available_word_pairs:
         return render_template('already_guessed.html')
@@ -297,6 +305,7 @@ def play():
         progress_class=progress_class,
         attempts=remaining_attempts
     )
+
 
 
 @bp.route('/check_guess', methods=['POST'])

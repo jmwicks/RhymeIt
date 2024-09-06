@@ -4,7 +4,7 @@ import logging
 from flask_login import current_user
 
 from app import db
-from app.models import WordPair, Synonym, UserWordPair
+from app.models import WordPair, UserWordPair
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
