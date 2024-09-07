@@ -1,17 +1,16 @@
 word1,word2,word1_synonym1,word1_synonym2,word2_synonym1,word2_synonym2,date_available
-heavy,levy,weighty,burdensome,imposition,charge,2024-09-06
 bizarre,jar,odd,unusual,container,vessel,2024-09-07
 kid,squid,child,youngster,cephalopod,mollusk,2024-09-08
 brave,wave,courageous,heroic,sea,crest,2024-09-09
 grand,stand,majestic,imposing,platform,stage,2024-09-10
 strong,song,sturdy,robust,tune,melody,2024-09-11
 elicit,visit,evoke,draw,attend,see,2024-09-12
-immense,expense,huge,massive,large,disbursement,2024-09-13
+immense,expense,huge,massive,price,cost,2024-09-13
 cold,gold,chilly,icy,wealth,fortune,2024-09-14
 bright,light,shiny,glowing,illumination,radiance,2024-09-15
 profound,ground,deep,meaningful,thoughtful,earth,2024-09-16
-vivid,amid,bright,colorful,distinct,among,2024-09-17
-sublime,climb,elevated,lofty,exalted,ascend,2024-09-18
+vivid,amid,bright,colorful,among,between,2024-09-17
+sublime,climb,glorious,lofty,scale,ascend,2024-09-18
 grain,train,cereal,seed,locomotive,engine,2024-09-19
 strong,throng,powerful,robust,crowd,assembly,2024-09-20
 grass,bass,herb,plant,fish,seafood,2024-09-21
@@ -19,12 +18,12 @@ clear,beer,transparent,pure,ale,brew,2024-09-22
 bold,hold,courageous,brave,grasp,clutch,2024-09-23
 sweet,treat,delicious,pleasant,goodie,delicacy,2024-09-24
 sky,high,heavens,ether,tall,lofty,2024-09-25
-toaster,coaster,appliance,heater,mat,stand,2024-09-26
+toaster,coaster,appliance,heater,mat,tray,2024-09-26
 lame,game,injured,disabled,match,contest,2024-09-27
 deep,sleep,profound,substantial,rest,slumber,2024-09-28
 fast,blast,quick,swift,explosion,burst,2024-09-29
 true,blue,authentic,genuine,azure,cobalt,2024-09-30
-ladder,batter,step stool,stairs,coating,dough,2024-10-01
+ladder,batter,stairs,hierarchy,coating,dough,2024-10-01
 shrub,grub,plant,bush,food,meal,2024-10-02
 ocean,lotion,sea,marine,cream,moisturizer,2024-10-03
 mile,trial,distance,unit,test,experiment,2024-10-04
