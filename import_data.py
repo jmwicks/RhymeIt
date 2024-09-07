@@ -68,4 +68,3 @@ def add_user_word_pairs(word_pair_id):
 
 if __name__ == "__main__":
     import_word_pairs('data/word_pairs.csv')
-

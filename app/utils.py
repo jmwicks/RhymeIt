@@ -56,4 +56,3 @@ def update_user_streak(user_id, success):
     user = User.query.get(user_id)
     user.update_streak(success)
     db.session.commit()
-

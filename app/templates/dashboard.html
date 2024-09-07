@@ -11,7 +11,6 @@
             <li>Max Streak: {{ user.max_streak }} days</li>
         </ul>
 
-        <h3>Recent Games:</h3>
         <ul>
             {% for stat in user.stats %}
                 <li>Date: {{ stat.date }},
