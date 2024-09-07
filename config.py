@@ -2,7 +2,7 @@ import os
 
 class Config:
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL') or \
-                              'postgresql://admin:iZz6y5nnvJjbNLTlvsmX0WgqiLKVKWkH@7tirbs.stackhero-network.com:6759/ah-postgresql-stackhero-amorphous-61673'
+                              'postgresql://admin:iZz6y5nnvJjbNLTlvsmX0WgqiLKVKWkH@7tirbs.stackhero-network.com:6759/postgres'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'mauGO9eK66xpitdLL7tRvp2x2v2LoGku'
