@@ -12,8 +12,8 @@
         <h1>Game Over</h1>
         <p>Sorry, you have used all your attempts for today. Please try again tomorrow.</p>
         <p>Here are the correct matching words:</p>
-        <p>Word 1: {{ word1 }}</p>
-        <p>Word 2: {{ word2 }}</p>
+        <p>Word 1: <br><strong style="text-transform: capitalize; font-size: 1.7em;">{{ word1 }}</strong></p>
+        <p>Word 2: <br><strong style="text-transform: capitalize; font-size: 1.7em;">{{ word2 }}</strong></p>
         <a href="{{ url_for('auth.dashboard') }}" class="btn btn-info">Go to Dashboard</a>
         <a href="{{ url_for('auth.logout') }}" class="btn btn-danger">Logout</a>
     </div>
