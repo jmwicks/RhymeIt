@@ -13,3 +13,5 @@ __pycache__/
 instance/
 
 config_local.py
+
+data/word_pairs.csv
