@@ -1,11 +1,7 @@
-from app import db  # Import the db instance from your __init__.py
+from app import db
 from sqlalchemy.exc import SQLAlchemyError
 from app.models import User
 
-
-# Define the user model using Flask-SQLAlchemy
-
-# Function to add a new user
 def register_user(username, password_hash, email):
     try:
         new_user = User(username=username, password_hash=password_hash, email=email)

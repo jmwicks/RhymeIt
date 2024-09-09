@@ -10,10 +10,11 @@ from app.utils import send_reset_email
 import logging
 from app.utils import record_user_guess, update_user_streak
 from datetime import datetime, timedelta
+import pytz
 
 bp = Blueprint('auth', __name__)
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+#logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+# = logging.getLogger(__name__)
 
 @bp.before_app_request
 def setup_logging():
@@ -81,6 +82,7 @@ def register():
 @bp.route("/login", methods=['GET', 'POST'])
 def login():
     form = LoginForm()
+    session.permanent = True
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
         if user and user.check_password(form.password.data):
@@ -102,6 +104,7 @@ def login():
             flash('Login unsuccessful. Please check username and password.', 'danger')
 
     return render_template('login.html', form=form)
+
 
 @bp.route('/reset_password_request', methods=['GET', 'POST'])
 def reset_password_request():
@@ -186,17 +189,20 @@ def get_hint():
 
     return redirect(url_for('auth.play', hint='yes'))
 
-
-
-from datetime import datetime
-
 @bp.route('/play', methods=['POST', 'GET'])
-@login_required
 def play():
     user_id = current_user.id
-    today = datetime.today().date()
-    last_guess_date = current_user.last_correct_guess_date
-    last_incorrect_guess_date = current_user.last_incorrect_guess_date
+    user = User.query.filter_by(id=user_id).first()
+
+    if user is None:
+        flash('User not found!', 'danger')
+        return redirect(url_for('auth.index'))
+
+    timezone = pytz.timezone('America/New_York')
+    today = datetime.now(timezone).date()
+
+    last_guess_date = user.last_correct_guess_date
+    last_incorrect_guess_date = user.last_incorrect_guess_date
 
     # Prevent playing if the user has already guessed today's word pair
     if last_guess_date == today or last_incorrect_guess_date == today:
@@ -251,10 +257,11 @@ def play():
             db.session.commit()
 
             # Update streak and points
-            update_user_streak(user_id, success=True)
-            current_user.total_points += points
-            current_user.last_correct_guess_date = today
-            db.session.commit()
+            if current_user.is_authenticated:
+                update_user_streak(user_id, success=True)
+                user.total_points += points
+                user.last_correct_guess_date = today
+                db.session.commit()
 
             # Clear session variables after successful guess
             session.pop('hints_used', None)
@@ -270,10 +277,11 @@ def play():
             # Handle game over after 3 attempts
             if session['attempts'] >= 3:
                 flash('You have used all your attempts!', 'danger')
-                update_user_streak(user_id, success=False)
-                current_user.last_incorrect_guess_date = today
-                user_word_pair.used = True
-                db.session.commit()
+                if current_user.is_authenticated:
+                    update_user_streak(user_id, success=False)
+                    user.last_incorrect_guess_date = today
+                    user_word_pair.used = True
+                    db.session.commit()
 
                 # Clear session after game over
                 session.pop('hints_used', None)
@@ -305,6 +313,7 @@ def play():
         progress_class=progress_class,
         attempts=remaining_attempts
     )
+
 
 
 

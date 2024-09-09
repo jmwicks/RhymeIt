@@ -1,9 +1,9 @@
-# app/utils.py or app/utils.py
 from flask_mail import Message
 from flask import url_for
 from app import mail, db
 from app.models import User, UserStats
 from datetime import date
+
 
 def send_reset_email(to_email, username, token):
     reset_url = url_for('auth.reset_password', token=token, _external=True)

@@ -10,14 +10,14 @@
 <body>
     <div class="content-container">
         <h1>Incorrect Guess</h1>
-        <p>One or both of your words are incorrect. Try again with the same synonyms or request a second pair.</p>
+        <p>One or both of your words are incorrect. Try again with the same words or request additional clues.</p>
 
         <form action="{{ url_for('auth.play', hint='no') }}" method="get">
-            <button class="btn btn-primary w-100">Try Again</button>
+            <button class="btn btn-primary w-100">Retry</button>
         </form><br>
 
         <form action="{{ url_for('auth.get_hint') }}" method="get">
-            <button class="btn btn-primary w-100">Try Again with Two Synonyms</button>
+            <button class="btn btn-primary w-100">Try Again with Additional Clues</button>
         </form><br>
 
         <form action="{{ url_for('auth.dashboard') }}" method="get">

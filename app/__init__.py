@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_migrate import Migrate
@@ -23,7 +23,6 @@ def create_app():
     logging.basicConfig(level=logging.DEBUG)
     app.logger.setLevel(logging.DEBUG)
 
-    # Determine environment and load the appropriate configuration
     config_type = os.getenv('FLASK_ENV', 'development')
     if config_type == 'production':
         app.config.from_object('config_prod.Config')
@@ -37,10 +36,11 @@ def create_app():
     csrf.init_app(app)
     app.logger.debug("CSRF protection initialized.")
 
+
     with app.app_context():
         from . import models
         from .routes import bp
         db.create_all()
-        app.register_blueprint(bp)
+        app.register_blueprint(routes.bp)
 
     return app

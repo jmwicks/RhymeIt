@@ -1,19 +1,15 @@
 from sqlalchemy import func
 from datetime import datetime
+from flask_login import UserMixin
 from app import db, login_manager
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import UserMixin
 from itsdangerous import URLSafeTimedSerializer
 from flask import current_app
-import logging
-
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
 
 
 class User(db.Model, UserMixin):
     __tablename__ = 'user'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
     email = db.Column(db.String(250), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
@@ -28,7 +24,7 @@ class User(db.Model, UserMixin):
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
-        logger.debug(f"Password hash set to: {self.password_hash}")
+        current_app.logger.debug(f"Password hash set to: {self.password_hash}")
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
@@ -72,11 +68,9 @@ class User(db.Model, UserMixin):
     def __repr__(self):
         return f'<User {self.username}>'
 
-
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
-
 
 class WordPair(db.Model):
     __tablename__ = 'word_pair'
@@ -94,8 +88,6 @@ class WordPair(db.Model):
     def __repr__(self):
         return f'<WordPair {self.word1} - {self.word2}>'
 
-
-
 class UserWordPair(db.Model):
     __tablename__ = 'user_word_pair'
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
@@ -106,9 +98,6 @@ class UserWordPair(db.Model):
 
     user = db.relationship('User', back_populates='user_word_pairs')
     word_pair = db.relationship('WordPair', back_populates='user_word_pairs')
-
-
-
 
 class UserStats(db.Model):
     id = db.Column(db.Integer, primary_key=True)

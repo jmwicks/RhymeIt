@@ -21,10 +21,12 @@ def import_word_pairs(file_path):
                 date_available_str = row.get('date_available', None)
 
                 # Convert date string to a Python date object
-                if date_available_str:
-                    date_available = datetime.strptime(date_available_str, '%Y-%m-%d').date()
-                else:
-                    date_available = None  # Set to None if no date provided
+                try:
+                    date_available = datetime.strptime(date_available_str,
+                                                       '%Y-%m-%d').date() if date_available_str else None
+                except ValueError:
+                    print(f"Invalid date format for word pair: {word1} - {word2}. Skipping.")
+                    continue
 
                 # Add or update the word pair
                 word_pair = WordPair.query.filter_by(
@@ -39,7 +41,7 @@ def import_word_pairs(file_path):
                         word2=word2,
                         word2_synonym1=synonym3_word,
                         word2_synonym2=synonym4_word,
-                        date_available=date_available  # Add the date object here
+                        date_available=date_available
                     )
                     db.session.add(word_pair)
                     db.session.commit()
