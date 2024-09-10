@@ -9,8 +9,27 @@
 </head>
 <body>
     <div class="content-container">
-        <h1>Incorrect Guess</h1>
-        <p>One or both of your words are incorrect. Try again with the same words or request additional clues.</p>
+        <h1>Not Quite!</h1><br>
+
+        <!-- Display feedback for the first guess -->
+        {% if word1_correct %}
+            <p><strong style="font-size: 1.2em; color: forestgreen;">Your first guess: {{ user_input1|capitalize }} is correct!</strong></p><br>
+        {% elif word1_synonym_correct %}
+            <p><strong style="font-size: 1.2em; color: royalblue;">Your first guess: {{ user_input1|capitalize }} is actually the other clue for this word! You're on the right track.</strong></p><br>
+        {% else %}
+            <p><strong style="font-size: 1.2em; color: darkred;">Your first guess: {{ user_input1|capitalize }} is incorrect.</strong></p><br>
+        {% endif %}
+
+        <!-- Display feedback for the second guess -->
+        {% if word2_correct %}
+            <p><strong style="font-size: 1.2em; color: forestgreen;">Your second guess: {{ user_input2|capitalize }} is correct!</strong></p><br>
+        {% elif word2_synonym_correct %}
+            <p><strong style="font-size: 1.2em; color: royalblue;">Your second guess: {{ user_input2|capitalize }} is actually the other clue for this word! You're on the right track.</strong></p><br>
+        {% else %}
+            <p><strong style="font-size: 1.2em; color: darkred;">Your second guess: {{ user_input2|capitalize }} is incorrect.</strong></p><br>
+        {% endif %}
+
+        <p>Try again with the same words or request an additional set of clues.</p><br>
 
         <form action="{{ url_for('auth.play', hint='no') }}" method="get">
             <button class="btn btn-primary w-100">Retry</button>

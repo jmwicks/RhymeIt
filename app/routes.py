@@ -249,7 +249,15 @@ def play():
         user_input1 = form.user_input1.data.strip().lower()
         user_input2 = form.user_input2.data.strip().lower()
 
-        if user_input1 == word1 and user_input2 == word2:
+        # Track which words are correct
+        word1_correct = user_input1 == word1
+        word2_correct = user_input2 == word2
+
+        # Check if the guessed words are synonyms
+        word1_synonym_correct = user_input1 in [syn.lower() for syn in synonyms_dict[word1]]
+        word2_synonym_correct = user_input2 in [syn.lower() for syn in synonyms_dict[word2]]
+
+        if word1_correct and word2_correct:
             points = 2 if session['hints_used'] == 0 else 1
             flash('Correct!', 'success')
             user_word_pair.used = True
@@ -289,7 +297,15 @@ def play():
                 session.pop('word_pair_id', None)
                 return render_template('game_over.html', word1=word1, word2=word2)
 
-            return render_template('incorrect_guess.html', hints_used=session['hints_used'])
+            # Pass information about which word (if any) was guessed correctly
+            return render_template('incorrect_guess.html',
+                                   word1_correct=word1_correct,
+                                   word2_correct=word2_correct,
+                                   word1_synonym_correct=word1_synonym_correct,
+                                   word2_synonym_correct=word2_synonym_correct,
+                                   user_input1=user_input1,
+                                   user_input2=user_input2,
+                                   hints_used=session['hints_used'])
 
     # Assign synonyms based on whether hints were requested
     synonym_word1_1 = synonyms_dict[word1][0]
@@ -313,7 +329,6 @@ def play():
         progress_class=progress_class,
         attempts=remaining_attempts
     )
-
 
 
 
