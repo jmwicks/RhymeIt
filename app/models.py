@@ -24,7 +24,6 @@ class User(db.Model, UserMixin):
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
-        current_app.logger.debug(f"Password hash set to: {self.password_hash}")
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
@@ -95,6 +94,9 @@ class UserWordPair(db.Model):
     guessed = db.Column(db.Boolean, default=False)
     used = db.Column(db.Boolean, default=False)
     attempts = db.Column(db.Integer, default=0, nullable=False)
+
+    word1_status = db.Column(db.String(10), default='wrong')  # correct, synonym, wrong
+    word2_status = db.Column(db.String(10), default='wrong')  # correct, synonym, wrong
 
     user = db.relationship('User', back_populates='user_word_pairs')
     word_pair = db.relationship('WordPair', back_populates='user_word_pairs')

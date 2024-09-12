@@ -3,13 +3,11 @@ from flask import render_template, request, redirect, url_for, flash, Blueprint,
 from flask_login import login_user, logout_user, current_user, login_required
 from app import db
 from app.models import User, WordPair, UserWordPair
-from app.forms import RegistrationForm, LoginForm, ResetPasswordRequestForm, ResetPasswordForm, PlayForm, CheckGuessForm
-from app.game import (load_word_pair, load_synonyms, move_word_pair_to_used, rhyming_game, record_user_guess, get_synonyms)
-from flask_mail import Message
+from app.forms import RegistrationForm, LoginForm, ResetPasswordRequestForm, ResetPasswordForm, CheckGuessForm
 from app.utils import send_reset_email
 import logging
-from app.utils import record_user_guess, update_user_streak
-from datetime import datetime, timedelta
+from app.utils import update_user_streak
+from datetime import datetime
 import pytz
 
 bp = Blueprint('auth', __name__)
@@ -38,7 +36,6 @@ def test_db():
 def register():
     form = RegistrationForm()
     if form.validate_on_submit():
-        print("Form is valid. Username and email checks passed.")
         username = form.username.data
         email = form.email.data
         password = form.password.data
@@ -60,7 +57,6 @@ def register():
         try:
             db.session.commit()
 
-            # Initialize user_word_pair records for the new user
             all_word_pairs = WordPair.query.all()
             for pair in all_word_pairs:
                 user_word_pair = UserWordPair(user_id=user.id, word_pair_id=pair.id)
@@ -105,7 +101,6 @@ def login():
 
     return render_template('login.html', form=form)
 
-
 @bp.route('/reset_password_request', methods=['GET', 'POST'])
 def reset_password_request():
     form = ResetPasswordRequestForm()
@@ -124,7 +119,6 @@ def reset_password_request():
         return redirect(url_for('auth.login'))
 
     return render_template('reset_password_request.html', form=form)
-
 
 @bp.route('/reset_password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
@@ -170,7 +164,6 @@ def dashboard():
                            total_points=total_points,
                            current_streak=current_streak,
                            max_streak=max_streak)
-
 
 @bp.route("/logout")
 def logout():
@@ -234,16 +227,17 @@ def play():
 
     form = CheckGuessForm()
 
-    # Sync session with database for tracking attempts and hints
+    # Initialize session variables
     if 'attempts' not in session or session.get('word_pair_id') != user_word_pair.word_pair_id:
-        session['attempts'] = user_word_pair.attempts
+        session['attempts'] = 1  # Start attempts at 1, not 0
         session['hints_used'] = 0
         session['word_pair_id'] = user_word_pair.word_pair_id
+        session['attempts_list'] = []  # Initialize attempts list
 
     # Handle hint requests
     hint_requested = request.args.get('hint', 'no') == 'yes'
     if hint_requested:
-        session['hints_used'] += 1
+        session['hints_used'] = 1  # Only allow 1 hint, no matter how many times it's requested
 
     if form.validate_on_submit():
         user_input1 = form.user_input1.data.strip().lower()
@@ -257,11 +251,21 @@ def play():
         word1_synonym_correct = user_input1 in [syn.lower() for syn in synonyms_dict[word1]]
         word2_synonym_correct = user_input2 in [syn.lower() for syn in synonyms_dict[word2]]
 
+        # Update attempts list
+        attempts_list = session.get('attempts_list', [])
+        attempts_list.append({
+            'word1_correct': word1_correct,
+            'word1_synonym_correct': word1_synonym_correct,
+            'word2_correct': word2_correct,
+            'word2_synonym_correct': word2_synonym_correct
+        })
+        session['attempts_list'] = attempts_list
+
         if word1_correct and word2_correct:
             points = 2 if session['hints_used'] == 0 else 1
             flash('Correct!', 'success')
             user_word_pair.used = True
-            user_word_pair.attempts = session['attempts']
+            user_word_pair.attempts = session['attempts']  # Ensure correct number of attempts is recorded
             db.session.commit()
 
             # Update streak and points
@@ -271,11 +275,18 @@ def play():
                 user.last_correct_guess_date = today
                 db.session.commit()
 
+            # Retrieve attempts and hints before clearing session
+            attempts_used = session.get('attempts', 1)  # Ensure attempts start from 1
+            hints_used = session.get('hints_used', 0)
+
             # Clear session variables after successful guess
             session.pop('hints_used', None)
             session.pop('attempts', None)
             session.pop('word_pair_id', None)
-            return render_template('correct_guess.html', points_awarded=points)
+            session.pop('attempts_list', None)
+
+            return render_template('correct_guess.html', points_awarded=points, attempts=attempts_used,
+                                   attempts_list=attempts_list, hints_used=hints_used)
 
         else:
             session['attempts'] += 1
@@ -283,7 +294,7 @@ def play():
             db.session.commit()
 
             # Handle game over after 3 attempts
-            if session['attempts'] >= 3:
+            if session['attempts'] >= 4:
                 flash('You have used all your attempts!', 'danger')
                 if current_user.is_authenticated:
                     update_user_streak(user_id, success=False)
@@ -291,11 +302,17 @@ def play():
                     user_word_pair.used = True
                     db.session.commit()
 
-                # Clear session after game over
+                attempts_list = session.get('attempts_list', [])
+                hints_used = session.get('hints_used', 0)
+
                 session.pop('hints_used', None)
                 session.pop('attempts', None)
                 session.pop('word_pair_id', None)
-                return render_template('game_over.html', word1=word1, word2=word2)
+                session.pop('attempts_list', None)
+
+                return render_template('game_over.html', word1=word1, word2=word2,
+                                       hints_used=hints_used,
+                                       attempts_list=attempts_list)
 
             # Pass information about which word (if any) was guessed correctly
             return render_template('incorrect_guess.html',
@@ -315,7 +332,7 @@ def play():
         synonym_word2_1 += f" / {synonyms_dict[word2][1]}"
 
     # Determine the progress bar class based on remaining attempts
-    remaining_attempts = 3 - session['attempts']
+    remaining_attempts = 4 - session['attempts']
     progress_class = f'progress-bar-{remaining_attempts}'
 
     return render_template(
@@ -329,8 +346,6 @@ def play():
         progress_class=progress_class,
         attempts=remaining_attempts
     )
-
-
 
 @bp.route('/check_guess', methods=['POST'])
 @login_required
@@ -382,8 +397,6 @@ def check_guess():
                            word1_synonym2=word_pair.word1_synonym2,
                            word2_synonym1=word_pair.word2_synonym1,
                            word2_synonym2=word_pair.word2_synonym2)
-
-
 
 def init_app(app):
     app.register_blueprint(bp)

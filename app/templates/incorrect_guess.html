@@ -29,23 +29,23 @@
             <p><strong style="font-size: 1.2em; color: darkred;">Your second guess: {{ user_input2|capitalize }} is incorrect.</strong></p><br>
         {% endif %}
 
-        <p>Try again with the same words or request an additional set of clues.</p><br>
+        <p>Try again with the same words <strong>OR</strong> request an additional pair of words to help you guess.</p><br>
 
         <form action="{{ url_for('auth.play', hint='no') }}" method="get">
             <button class="btn btn-primary w-100">Retry</button>
         </form><br>
 
         <form action="{{ url_for('auth.get_hint') }}" method="get">
-            <button class="btn btn-primary w-100">Try Again with Additional Clues</button>
+            <button class="btn btn-primary w-100">I'm stuck! Give me another pair of words.</button>
         </form><br>
 
         <form action="{{ url_for('auth.dashboard') }}" method="get">
             <button class="btn btn-info w-100">Go to Dashboard</button>
         </form><br>
 
-        <form action="{{ url_for('auth.logout') }}" method="get">
+        <!--<form action="{{ url_for('auth.logout') }}" method="get">
             <button class="btn btn-danger w-100">Logout</button>
-        </form>
+        </form> -->
     </div>
 
     <!-- Optional: Bootstrap JS (for any interactive components) -->

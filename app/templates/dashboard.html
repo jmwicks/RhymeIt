@@ -6,7 +6,6 @@
 
         <p>Your Puzzle Stats:</p>
         <ul class="dashboard-stats">
-            <li>Total Points: {{ user.total_points }}</li>
             <li>Current Streak: {{ user.current_streak }} days</li>
             <li>Max Streak: {{ user.max_streak }} days</li>
         </ul>
@@ -41,15 +40,15 @@
                     <div class="modal-body">
                         <p>Welcome to Rhyme It! Here’s how to play:</p>
                         <ul class="instructions-list">
-                            <li>You will be presented with a synonym for each of the two target words.
-                                Your goal is to guess the original two words based on the synonyms.</li><br>
-                            <li>If you guess correctly, you earn 2 points.</li>
-                            <li>If you request a second pair of clues and then guess correctly, you earn 1 point.</li>
+                            <li>You will be given a synonym for each of the two target rhyming words.
+                                Your goal is to guess the two target rhyming words based on the synonyms.</li><br>
+                            <li>After the first guess, you will have the option to ask for an additional pair of words to help if you're stuck.</li>
+                            <li>You will also get feedback on your guesses after each attempt.</li>
                             <li>You have a total of 3 attempts per day to guess the words.</li><br>
                             <li>For example:</li>
-                            <li>Synonym 1: Rock</li>
-                            <li>Synonym 2: Chair</li>
-                            <li>Answer: Stone Throne</li>
+                            <li>Synonym 1: <strong>Rock</strong></li>
+                            <li>Synonym 2: <strong>Chair</strong></li>
+                            <li>Answer: <strong>Stone Throne</strong></li>
                         </ul>
                     </div>
                     <div class="modal-footer">

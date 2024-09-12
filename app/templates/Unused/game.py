@@ -60,7 +60,6 @@ def move_synonyms_to_used(word_pair):
     # Synonyms are already in the database, so no action needed
     pass
 
-
 def rhyming_game():
     user_id = current_user.id  # Get the current user's ID
     logger.debug(f"Starting rhyming game for user_id: {user_id}")

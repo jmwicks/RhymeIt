@@ -24,40 +24,40 @@
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 <div class="alert alert-{{ category }}" role="alert">
-                    {{ message }}
+                    {{ messages[0] }}
                 </div>
             {% endif %}
         {% endwith %}
         <h1>Register</h1>
-        <form method="POST" action="{{ url_for('auth.register') }}" novalidate>
+        <form method="POST" action="{{ url_for('auth.register') }}">
             {{ form.hidden_tag() }}
             <div class="form-group">
                 {{ form.username.label }}<span class="required"></span><br>
                 {{ form.username(class="form-control") }}<br>
-                {% for error in form.username.errors %}
-                    <span class="error">{{ error }}</span><br>
-                {% endfor %}
+                {% if form.username.errors and form.username.data %}
+                    <span class="error">{{ form.username.errors[0] }}</span><br>
+                {% endif %}
             </div>
             <div class="form-group">
                 {{ form.email.label }}<span class="required"></span><br>
                 {{ form.email(class="form-control") }}<br>
-                {% for error in form.email.errors %}
-                    <span class="error">{{ error }}</span><br>
-                {% endfor %}
+                {% if form.email.errors and form.email.data %}
+                    <span class="error">{{ form.email.errors[0] }}</span><br>
+                {% endif %}
             </div>
             <div class="form-group">
                 {{ form.password.label }}<span class="required"></span><br>
                 {{ form.password(class="form-control") }}<br>
-                {% for error in form.password.errors %}
-                    <span class="error">{{ error }}</span><br>
-                {% endfor %}
+                {% if form.password.errors and form.password.data %}
+                    <span class="error">{{ form.password.errors[0] }}</span><br>
+                {% endif %}
             </div>
             <div class="form-group">
                 {{ form.confirm_password.label }}<span class="required"></span><br>
                 {{ form.confirm_password(class="form-control") }}<br>
-                {% for error in form.confirm_password.errors %}
-                    <span class="error">{{ error }}</span><br>
-                {% endfor %}
+                {% if form.confirm_password.errors and form.confirm_password.data %}
+                    <span class="error">{{ form.confirm_password.errors[0] }}</span><br>
+                {% endif %}
             </div>
             <div class="form-group">
                 {{ form.submit(class="btn btn-primary") }}
