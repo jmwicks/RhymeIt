@@ -13,7 +13,7 @@ class Config:
     DEBUG = False
 
     SESSION_PERMANENT = True
-    PERMANENT_SESSION_LIFETIME = timedelta(days=2)
+    PERMANENT_SESSION_LIFETIME = timedelta(days=7)
 
     MAIL_SERVER = os.getenv('MAIL_SERVER')
     MAIL_PORT = int(os.getenv('MAIL_PORT'))

@@ -82,9 +82,8 @@ def login():
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
         if user and user.check_password(form.password.data):
-            login_user(user, remember=form.remember.data)
+            login_user(user, remember=True)
 
-            # Initialize user_word_pair records if not already set up
             existing_pairs = {pair.word_pair_id for pair in UserWordPair.query.filter_by(user_id=user.id).all()}
             all_pairs = {pair.id for pair in WordPair.query.all()}
 
@@ -199,7 +198,38 @@ def play():
 
     # Prevent playing if the user has already guessed today's word pair
     if last_guess_date == today or last_incorrect_guess_date == today:
-        return render_template('already_guessed.html')
+        print("Fetching game results...")
+        game_results = UserWordPair.query.filter_by(
+            user_id=user_id,
+            used=True
+        ).first()
+
+        if game_results:
+            print("Game Results Found:", game_results)
+            print("Word 1 Status:", game_results.word1_status)
+            print("Word 2 Status:", game_results.word2_status)
+
+            def status_to_color(status):
+                if status == 'correct':
+                    return 'green'
+                elif status == 'synonym':
+                    return 'yellow'
+                else:
+                    return 'grey'
+
+            attempts_list = []
+            # Retrieve attempts for today
+            for i in range(game_results.attempts):
+                attempts_list.append({
+                    'word1_status': status_to_color(game_results.word1_status),
+                    'word2_status': status_to_color(game_results.word2_status)
+                })
+
+            print("Attempts List:", attempts_list)
+
+            hints_used = 0  # Update this if you have a way to track hint usage
+
+            return render_template('already_guessed.html', attempts_list=attempts_list, hints_used=hints_used)
 
     # Fetch only word pairs available today and not yet used
     available_word_pairs = UserWordPair.query.join(WordPair).filter(
@@ -251,7 +281,22 @@ def play():
         word1_synonym_correct = user_input1 in [syn.lower() for syn in synonyms_dict[word1]]
         word2_synonym_correct = user_input2 in [syn.lower() for syn in synonyms_dict[word2]]
 
-        # Update attempts list
+        # Update word1_status and word2_status based on the guesses
+        if word1_correct:
+            user_word_pair.word1_status = 'correct'
+        elif word1_synonym_correct:
+            user_word_pair.word1_status = 'synonym'
+        else:
+            user_word_pair.word1_status = 'wrong'
+
+        if word2_correct:
+            user_word_pair.word2_status = 'correct'
+        elif word2_synonym_correct:
+            user_word_pair.word2_status = 'synonym'
+        else:
+            user_word_pair.word2_status = 'wrong'
+
+        # Update attempts list in session
         attempts_list = session.get('attempts_list', [])
         attempts_list.append({
             'word1_correct': word1_correct,
@@ -261,11 +306,14 @@ def play():
         })
         session['attempts_list'] = attempts_list
 
+        # Update user_word_pair with the number of attempts and status of words
+        user_word_pair.attempts = session['attempts']
+        db.session.commit()
+
         if word1_correct and word2_correct:
             points = 2 if session['hints_used'] == 0 else 1
             flash('Correct!', 'success')
             user_word_pair.used = True
-            user_word_pair.attempts = session['attempts']  # Ensure correct number of attempts is recorded
             db.session.commit()
 
             # Update streak and points
@@ -293,7 +341,7 @@ def play():
             user_word_pair.attempts = session['attempts']
             db.session.commit()
 
-            # Handle game over after 3 attempts
+            # Handle game over after 4 attempts
             if session['attempts'] >= 4:
                 flash('You have used all your attempts!', 'danger')
                 if current_user.is_authenticated:
@@ -346,6 +394,8 @@ def play():
         progress_class=progress_class,
         attempts=remaining_attempts
     )
+
+
 
 @bp.route('/check_guess', methods=['POST'])
 @login_required
