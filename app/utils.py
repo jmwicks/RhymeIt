@@ -2,7 +2,8 @@ from flask_mail import Message
 from flask import url_for
 from app import mail, db
 from app.models import User, UserStats
-from datetime import date
+from datetime import date, datetime, timedelta
+import jwt
 
 
 def send_reset_email(to_email, username, token):
@@ -56,3 +57,15 @@ def update_user_streak(user_id, success):
     user = User.query.get(user_id)
     user.update_streak(success)
     db.session.commit()
+
+def create_token(app, user_id):
+    expiration = datetime.utcnow() + timedelta(days=21)
+    token = jwt.encode({'user_id': user_id, 'exp': expiration}, app.config['SECRET_KEY'], algorithm='HS256')
+    return token
+
+def verify_token(app, token):
+    try:
+        decoded = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+        return decoded['user_id']
+    except jwt.ExpiredSignatureError:
+        return None

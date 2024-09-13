@@ -1,17 +1,18 @@
 import traceback
-from flask import render_template, request, redirect, url_for, flash, Blueprint, current_app, session
+from urllib import response
+
+from flask import render_template, request, redirect, url_for, flash, Blueprint, current_app, session, make_response
 from flask_login import login_user, logout_user, current_user, login_required
 from app import db
 from app.models import User, WordPair, UserWordPair
 from app.forms import RegistrationForm, LoginForm, ResetPasswordRequestForm, ResetPasswordForm, CheckGuessForm
-from app.utils import send_reset_email
+from app.utils import send_reset_email, create_token, update_user_streak
 import logging
-from app.utils import update_user_streak
 from datetime import datetime
 import pytz
 
 bp = Blueprint('auth', __name__)
-#logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 # = logging.getLogger(__name__)
 
 @bp.before_app_request
@@ -85,10 +86,13 @@ def login():
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
         if user and user.check_password(form.password.data):
+            logout_user()
             login_user(user, remember=True)
 
             existing_pairs = {pair.word_pair_id for pair in UserWordPair.query.filter_by(user_id=user.id).all()}
             all_pairs = {pair.id for pair in WordPair.query.all()}
+
+            token = create_token(current_app, user.id)
 
             for pair_id in all_pairs - existing_pairs:
                 user_word_pair = UserWordPair(user_id=user.id, word_pair_id=pair_id)
@@ -170,7 +174,10 @@ def dashboard():
 @bp.route("/logout")
 def logout():
     logout_user()
+    session.permanent = False
+    response = make_response(redirect(url_for('auth.login')))
     session.clear()
+    response.set_cookie('"rhyme_it_cookie"', '', expires=0)
     return redirect(url_for('auth.login'))
 
 @bp.route('/get_hint', methods=['GET'])

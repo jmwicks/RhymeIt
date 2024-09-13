@@ -8,16 +8,18 @@ class Config:
 
     SECRET_KEY = os.getenv('SECRET_KEY') or 'mauGO9eK66xpitdLL7tRvp2x2v2LoGku'
     SECURITY_PASSWORD_SALT = os.getenv('SECURITY_PASSWORD_SALT', 'a_default_salt')
+    WTF_CSRF_SECRET_KEY = os.getenv('WTF_CSRF_SECRET_KEY') or 'your_csrf_secret_key'
     WTF_CSRF_ENABLED = True
 
     DEBUG = False
 
     # Session settings
     SESSION_TYPE = 'sqlalchemy'
-    SESSION_SQLALCHEMY = None  # Will be set in create_app
+    SESSION_SQLALCHEMY = None
     SESSION_PERMANENT = True
-    PERMANENT_SESSION_LIFETIME = timedelta(days=7)
-
+    PERMANENT_SESSION_LIFETIME = timedelta(days=365 * 10)
+    SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_HTTPONLY = True
 
     MAIL_SERVER = os.getenv('MAIL_SERVER')
     MAIL_PORT = int(os.getenv('MAIL_PORT'))
