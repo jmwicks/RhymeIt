@@ -12,8 +12,12 @@ class Config:
 
     DEBUG = False
 
+    # Session settings
+    SESSION_TYPE = 'sqlalchemy'
+    SESSION_SQLALCHEMY = None  # Will be set in create_app
     SESSION_PERMANENT = True
     PERMANENT_SESSION_LIFETIME = timedelta(days=7)
+
 
     MAIL_SERVER = os.getenv('MAIL_SERVER')
     MAIL_PORT = int(os.getenv('MAIL_PORT'))

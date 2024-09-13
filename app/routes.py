@@ -395,8 +395,6 @@ def play():
         attempts=remaining_attempts
     )
 
-
-
 @bp.route('/check_guess', methods=['POST'])
 @login_required
 def check_guess():
