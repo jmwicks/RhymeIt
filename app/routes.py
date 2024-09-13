@@ -20,6 +20,9 @@ def setup_logging():
 
 @bp.route("/", methods=["GET", "POST"])
 def index():
+    if current_user.is_authenticated:
+        return redirect(url_for('auth.dashboard'))
+
     login_form = LoginForm()
     register_form = RegistrationForm()
     return render_template("index.html", login_form=login_form, register_form=register_form)
