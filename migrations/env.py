@@ -1,6 +1,6 @@
 import logging
 from logging.config import fileConfig
-
+from app.models import db
 from flask import current_app
 
 from alembic import context
@@ -35,7 +35,7 @@ def get_engine_url():
 # add your model's MetaData object here
 # for 'autogenerate' support
 # from myapp import mymodel
-# target_metadata = mymodel.Base.metadata
+target_metadata = db.metadata
 config.set_main_option('sqlalchemy.url', get_engine_url())
 target_db = current_app.extensions['migrate'].db
 
@@ -52,7 +52,7 @@ def get_metadata():
 
 
 def run_migrations_offline():
-    """Run migrations old6 old5 in 'offline' mode.
+    """Run migrations in 'offline' mode.
 
     This configures the context with just a URL
     and not an Engine, though an Engine is acceptable
@@ -73,7 +73,7 @@ def run_migrations_offline():
 
 
 def run_migrations_online():
-    """Run migrations old6 old5 in 'online' mode.
+    """Run migrations in 'online' mode.
 
     In this scenario we need to create an Engine
     and associate a connection with the context.

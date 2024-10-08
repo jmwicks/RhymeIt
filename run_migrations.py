@@ -17,7 +17,7 @@ db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
 # Create Alembic config
-alembic_cfg = Config("migrations/alembic.ini")
+alembic_cfg = Config("migrations backup current/versions/alembic.ini")
 
 # Use application context to run the migration
 with app.app_context():
