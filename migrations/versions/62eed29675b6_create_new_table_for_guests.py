@@ -21,8 +21,8 @@ def upgrade():
     with op.batch_alter_table('user', schema=None) as batch_op:
         batch_op.drop_column('unique_guest_id')
 
-    with op.batch_alter_table('user_word_pair', schema=None) as batch_op:
-        batch_op.create_foreign_key(None, 'guest', ['guest_id'], ['id'])
+    #with op.batch_alter_table('user_word_pair', schema=None) as batch_op:
+    #    batch_op.create_foreign_key(None, 'guest', ['guest_id'], ['id'])
 
     # ### end Alembic commands ###
 
@@ -32,7 +32,7 @@ def downgrade():
     with op.batch_alter_table('user_word_pair', schema=None) as batch_op:
         batch_op.drop_constraint(None, type_='foreignkey')
 
-    with op.batch_alter_table('user', schema=None) as batch_op:
-        batch_op.add_column(sa.Column('unique_guest_id', sa.INTEGER(), autoincrement=False, nullable=True))
+    #with op.batch_alter_table('user', schema=None) as batch_op:
+    #    batch_op.add_column(sa.Column('unique_guest_id', sa.INTEGER(), autoincrement=False, nullable=True))
 
     # ### end Alembic commands ###
