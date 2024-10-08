@@ -2,7 +2,7 @@ import csv
 from datetime import datetime
 
 from app import db, create_app
-from app.models import WordPair, User, UserWordPair
+from app.models import WordPair, User, UserWordPair, GuestUserWordPair, Guest  # Import GuestUserWordPair and Guest models
 
 app = create_app()
 
@@ -49,6 +49,9 @@ def import_word_pairs(file_path):
                 # Add user_word_pair entries for each user
                 add_user_word_pairs(word_pair.id)
 
+                # Add guest_user_word_pair entries for each guest
+                add_guest_word_pairs(word_pair.id)
+
 def add_user_word_pairs(word_pair_id):
     """Add user-word pair relationships for each user."""
     with app.app_context():
@@ -65,8 +68,21 @@ def add_user_word_pairs(word_pair_id):
                 db.session.add(user_word_pair)
         db.session.commit()
 
-
-
+def add_guest_word_pairs(word_pair_id):
+    """Add guest-word pair relationships for each guest."""
+    with app.app_context():
+        guests = Guest.query.all()
+        for guest in guests:
+            guest_word_pair = GuestUserWordPair.query.filter_by(
+                guest_id=guest.id, word_pair_id=word_pair_id
+            ).first()
+            if not guest_word_pair:
+                guest_word_pair = GuestUserWordPair(
+                    guest_id=guest.id,
+                    word_pair_id=word_pair_id
+                )
+                db.session.add(guest_word_pair)
+        db.session.commit()
 
 if __name__ == "__main__":
     import_word_pairs('data/word_pairs.csv')

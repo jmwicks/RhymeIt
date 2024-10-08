@@ -6,8 +6,8 @@
 
         <p>Your Puzzle Stats:</p>
         <ul class="dashboard-stats">
-            <li>Current Streak: {{ user.current_streak }} days</li>
-            <li>Max Streak: {{ user.max_streak }} days</li>
+            <li>Current Streak: {{ current_streak }} days</li>
+            <li>Max Streak: {{ max_streak }} days</li>
         </ul>
 
         <ul>
@@ -23,11 +23,13 @@
         <div class="d-flex flex-column mt-4">
             <a href="{{ url_for('auth.play') }}" class="btn btn-primary mb-2">Play</a>
             <button type="button" class="btn btn-secondary mb-2" data-bs-toggle="modal" data-bs-target="#howToPlayModal">How to Play</button>
-            <a href="{{ url_for('auth.logout') }}" class="btn btn-danger">Logout</a>
+            <form method="POST" action="{{ url_for('auth.logout') }}">
+                {{ form.hidden_tag() }}
+                <button type="submit" class="btn btn-danger w-100">Logout</button>
+            </form>
             <p class="contact-info">To provide questions, concerns, comments, or compliments (or just joy), email me at
                 <a href="mailto:rhyme.it.manager@gmail.com">rhyme.it.manager@gmail.com</a>.</p>
-</div>
-
+        </div>
 
         <!-- Modal for instructions -->
         <div class="modal fade" id="howToPlayModal" tabindex="-1" aria-labelledby="howToPlayModalLabel" aria-hidden="true">

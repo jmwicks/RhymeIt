@@ -99,13 +99,6 @@
             </div>
         </div>
 
-        {% if form.errors %}
-            <h2>One or both of your guesses are incorrect!</h2>
-            <form action="{{ url_for('auth.get_hint') }}" method="get">
-                <button type="submit" class="btn btn-warning w-100">No luck? Try with two synonyms</button>
-            </form>
-        {% endif %}
-
         <div class="form-container">
             <form action="{{ url_for('auth.play') }}" method="post">
                 {{ form.hidden_tag() }}
@@ -123,14 +116,11 @@
             </form>
         </div>
 
-        <!-- Buttons vertically stacked below the form -->
         <div class="buttons-container">
             <a href="{{ url_for('auth.dashboard') }}" class="btn btn-info text-white w-100">Go to Dashboard</a>
-            <a href="{{ url_for('auth.logout') }}" class="btn btn-danger w-100">Logout</a>
         </div>
     </div>
 
-    <!-- Optional: Bootstrap JS (for any interactive components) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kaKTk0XPO7kM8qWkM+TmA7CvZ9ZX4Q9tkjOHqUjHl0cG7p8+2LqF4oG4I8L05X3a" crossorigin="anonymous"></script>
 </body>
 </html>

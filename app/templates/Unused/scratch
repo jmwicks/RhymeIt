@@ -548,3 +548,246 @@ class Synonym(db.Model):
 
     def __repr__(self):
         return f'<Synonym {self.word}>'
+
+@bp.route('/play', methods=['POST', 'GET'])
+def play():
+    user_id = current_user.id
+    user = User.query.filter_by(id=user_id).first()
+
+    if user is None:
+        flash('User not found!', 'danger')
+        return redirect(url_for('auth.index'))
+
+    timezone = pytz.timezone('America/New_York')
+    today = datetime.now(timezone).date()
+
+    word_pair = WordPair.query.filter_by(date_available=today).first()
+    if not word_pair:
+        return render_template('already_guessed.html')
+    if current_user.is_authenticated:
+        # Database logic for logged-in users
+        game_results = UserWordPair.query.filter_by(
+            user_id=user_id,
+            word_pair_id=word_pair.id,
+            used=True
+        ).first()
+
+        if game_results:
+            attempts_list = []
+            for i in range(game_results.attempts):
+                attempts_list.append({
+                    'word1_status': game_results.word1_status,
+                    'word2_status': game_results.word2_status
+                })
+
+            hints_used = session.get('hints_used', 0)
+            return render_template('already_guessed.html', attempts_list=attempts_list, hints_used=hints_used,
+                                   word1=word_pair.word1, word2=word_pair.word2)
+
+        existing_record = UserWordPair.query.filter_by(
+            user_id=user_id,
+            word_pair_id=word_pair.id
+        ).first()
+
+        if not existing_record:
+            user_word_pair = UserWordPair(
+                user_id=user_id,
+                word_pair_id=word_pair.id,
+                used=False,
+                attempts=0,
+                word1_status='wrong',
+                word2_status='wrong'
+            )
+            db.session.add(user_word_pair)
+        else:
+            user_word_pair = existing_record
+            user_word_pair.used = False
+
+        db.session.commit()
+        attempts_used = user_word_pair.attempts
+
+    game_results = UserWordPair.query.filter_by(
+        user_id=user_id,
+        word_pair_id=word_pair.id,
+        used=True
+    ).first()
+
+    if game_results:
+        attempts_list = []
+        for i in range(game_results.attempts):
+            attempts_list.append({
+                'word1_status': game_results.word1_status,
+                'word2_status': game_results.word2_status
+            })
+
+        hints_used = session.get('hints_used', 0)
+        return render_template('already_guessed.html', attempts_list=attempts_list, hints_used=hints_used,
+                               word1=word_pair.word1, word2=word_pair.word2)
+
+    existing_record = db.session.query(UserWordPair).filter_by(
+        user_id=user_id,
+        word_pair_id=word_pair.id
+    ).first()
+
+    if not existing_record:
+        user_word_pair = UserWordPair(
+            user_id=user_id,
+            word_pair_id=word_pair.id,
+            used=False,
+            attempts=0,
+            word1_status='wrong',
+            word2_status='wrong'
+        )
+        db.session.add(user_word_pair)
+    else:
+        user_word_pair = existing_record
+        user_word_pair.used = False
+
+    db.session.commit()
+
+    # Check how many attempts have been made today
+    attempts_today = UserWordPair.query.filter_by(
+        user_id=user_id,
+        word_pair_id=word_pair.id,
+        used=True
+    ).count()
+
+    # Initialize attempts used here based on the database value
+    attempts_used = user_word_pair.attempts
+
+    # Set remaining attempts based on how many have been made today
+    if attempts_today < 3:
+        remaining_attempts = 3 - attempts_today
+    else:
+        return render_template('already_guessed.html', word1=word_pair.word1, word2=word_pair.word2)
+
+    word1 = word_pair.word1
+    word2 = word_pair.word2
+
+    synonyms_dict = {
+        word1: [word_pair.word1_synonym1, word_pair.word1_synonym2],
+        word2: [word_pair.word2_synonym1, word_pair.word2_synonym2]
+    }
+
+    form = CheckGuessForm()
+
+    if 'hints_used' not in session:
+        session['hints_used'] = 0
+        session['attempts_list'] = []
+
+    hint_requested = request.args.get('hint', 'no') == 'yes'
+    if hint_requested:
+        session['hints_used'] += 1
+
+    if form.validate_on_submit():
+        user_input1 = form.user_input1.data.strip().lower()
+        user_input2 = form.user_input2.data.strip().lower()
+
+        word1_correct = user_input1 == word1
+        word2_correct = user_input2 == word2
+
+        word1_synonym_correct = user_input1 in [syn.lower() for syn in synonyms_dict[word1]]
+        word2_synonym_correct = user_input2 in [syn.lower() for syn in synonyms_dict[word2]]
+
+        if word1_correct:
+            user_word_pair.word1_status = 'correct'
+        elif word1_synonym_correct:
+            user_word_pair.word1_status = 'synonym'
+        else:
+            user_word_pair.word1_status = 'wrong'
+
+        if word2_correct:
+            user_word_pair.word2_status = 'correct'
+        elif word2_synonym_correct:
+            user_word_pair.word2_status = 'synonym'
+        else:
+            user_word_pair.word2_status = 'wrong'
+
+        user_word_pair.attempts += 1  # Increment the attempts in the database
+        db.session.commit()
+
+        attempts_used += 1  # Increment attempts used
+        session['attempts'] = attempts_used  # Update session attempts
+
+        attempts_list = session.get('attempts_list', [])
+        attempts_list.append({
+            'word1_correct': word1_correct,
+            'word1_synonym_correct': word1_synonym_correct,
+            'word2_correct': word2_correct,
+            'word2_synonym_correct': word2_synonym_correct
+        })
+        session['attempts_list'] = attempts_list
+
+        if word1_correct and word2_correct:
+            points = 2 if session['hints_used'] == 0 else 1
+            flash('Correct!', 'success')
+            user_word_pair.used = True
+            db.session.commit()
+
+            if current_user.is_authenticated:
+                update_user_streak(user_id, success=True)
+                user.total_points += points
+                user.last_correct_guess_date = today
+                db.session.commit()
+            else:
+                session['last_correct_guess_date'] = today
+
+            hints_used = session.get('hints_used', 0)
+
+            session.pop('hints_used', None)
+            session.pop('attempts_list', None)
+
+            return render_template('correct_guess.html', points_awarded=points, attempts=attempts_used,
+                                   attempts_list=attempts_list, hints_used=hints_used)
+
+        else:
+            if attempts_used >= 3:  # Adjust this line for attempt limit
+                flash('You have used all your attempts!', 'danger')
+                if current_user.is_authenticated:
+                    update_user_streak(user_id, success=False)
+                    user.last_incorrect_guess_date = today
+                    user_word_pair.used = True
+                    db.session.commit()
+                else:
+                    session['last_incorrect_guess_date'] = today
+
+                attempts_list = session.get('attempts_list', [])
+                hints_used = session.get('hints_used', 0)
+
+                session.pop('hints_used', None)
+                session.pop('attempts_list', None)
+
+                return render_template('game_over.html', word1=word1, word2=word2,
+                                       hints_used=hints_used,
+                                       attempts_list=attempts_list)
+
+            return render_template('incorrect_guess.html',
+                                   word1_correct=word1_correct,
+                                   word2_correct=word2_correct,
+                                   word1_synonym_correct=word1_synonym_correct,
+                                   word2_synonym_correct=word2_synonym_correct,
+                                   user_input1=user_input1,
+                                   user_input2=user_input2,
+                                   hints_used=session['hints_used'])
+
+    synonym_word1_1 = synonyms_dict[word1][0]
+    synonym_word2_1 = synonyms_dict[word2][0]
+    if session['hints_used'] > 0:
+        synonym_word1_1 += f" / {synonyms_dict[word1][1]}"
+        synonym_word2_1 += f" / {synonyms_dict[word2][1]}"
+
+    # Determine the progress bar class based on remaining attempts
+    remaining_attempts = 3 - attempts_used
+    progress_class = f'progress-bar-{remaining_attempts}'
+
+    return render_template(
+        'play.html',
+        word1=word1,
+        word2=word2,
+        form=form,
+        synonym_word1=synonym_word1_1,
+        synonym_word2=synonym_word2_1,
+        already_guessed=False,
+        progress_class=progress_class,
+        attempts=remaining_attempts
+    )

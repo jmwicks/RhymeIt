@@ -37,7 +37,7 @@
         {% if hints_used == 0 %}
             <p>Fantastic! You didn't use any hints.</p>
         {% else %}
-            <p>You used a hint{{ '' if hints_used == 1 else 's' }}.</p>
+            <p>You used a hint{{ '' if hints_used == 1 }}.</p>
         {% endif %}
 
         <form action="{{ url_for('auth.dashboard') }}" method="get">

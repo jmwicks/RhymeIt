@@ -1,19 +1,27 @@
 import traceback
+import uuid
 from urllib import response
+import random
 
-from flask import render_template, request, redirect, url_for, flash, Blueprint, current_app, session, make_response
+from flask import render_template, request, redirect, url_for, flash, Blueprint, current_app, session, make_response, \
+    get_flashed_messages
 from flask_login import login_user, logout_user, current_user, login_required
 from app import db
-from app.models import User, WordPair, UserWordPair
-from app.forms import RegistrationForm, LoginForm, ResetPasswordRequestForm, ResetPasswordForm, CheckGuessForm
+from app.models import User, WordPair, UserWordPair, Guest, GuestUserWordPair
+from app.forms import RegistrationForm, LoginForm, ResetPasswordRequestForm, ResetPasswordForm, CheckGuessForm, GuestForm
 from app.utils import send_reset_email, create_token, update_user_streak
 import logging
 from datetime import datetime
 import pytz
+from flask_wtf import FlaskForm
+from wtforms import SubmitField
+
 
 bp = Blueprint('auth', __name__)
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 # = logging.getLogger(__name__)
+class LogoutForm(FlaskForm):
+    submit = SubmitField('Logout')
 
 @bp.before_app_request
 def setup_logging():
@@ -26,7 +34,18 @@ def index():
 
     login_form = LoginForm()
     register_form = RegistrationForm()
-    return render_template("index.html", login_form=login_form, register_form=register_form)
+    guest_form = GuestForm()
+
+    if guest_form.validate_on_submit():
+        # Redirect guest users to the guest play route
+        return redirect(url_for('guest_play'))
+
+    return render_template(
+        "index.html",
+        login_form=login_form,
+        register_form=register_form,
+        guest_form=guest_form
+    )
 
 @bp.route('/test_db')
 def test_db():
@@ -38,6 +57,9 @@ def test_db():
 
 @bp.route("/register", methods=['GET', 'POST'])
 def register():
+    # Retrieve and discard any flash messages to prevent them from showing up
+    get_flashed_messages()  # This will discard all flash messages
+
     form = RegistrationForm()
     if form.validate_on_submit():
         username = form.username.data
@@ -78,6 +100,7 @@ def register():
             flash('An error occurred while creating the account. Please try again.', 'danger')
 
     return render_template('register.html', form=form)
+
 
 @bp.route("/login", methods=['GET', 'POST'])
 def login():
@@ -155,33 +178,35 @@ def confirmation():
     return render_template('confirmation.html')
 
 @bp.route('/dashboard')
-@login_required
 def dashboard():
     user = current_user
+    form = LogoutForm()  # Instantiate the LogoutForm
 
     # Calculate total points, current streak, and max streak
     total_points = sum(stat.points_earned for stat in user.stats)
     current_streak = user.current_streak
     max_streak = user.max_streak
 
-    # Pass this data to the template
     return render_template('dashboard.html',
                            user=user,
                            total_points=total_points,
                            current_streak=current_streak,
-                           max_streak=max_streak)
+                           max_streak=max_streak,
+                           form=form)
 
-@bp.route("/logout")
+@bp.route("/logout", methods=["POST"])
 def logout():
-    logout_user()
-    session.permanent = False
-    response = make_response(redirect(url_for('auth.login')))
-    session.clear()
-    response.set_cookie('"rhyme_it_cookie"', '', expires=0)
+    if current_user.is_authenticated:
+        logout_user()
+
+    session.clear()  # Clears session data
+    flash('You have been logged out.', 'success')
+    session.pop('_permanent', None)  # Ensure permanent session flag is removed
+
     return redirect(url_for('auth.login'))
 
+
 @bp.route('/get_hint', methods=['GET'])
-@login_required
 def get_hint():
     if 'hints_used' not in session:
         session['hints_used'] = 0
@@ -191,7 +216,9 @@ def get_hint():
 
     return redirect(url_for('auth.play', hint='yes'))
 
+
 @bp.route('/play', methods=['POST', 'GET'])
+@login_required
 def play():
     user_id = current_user.id
     user = User.query.filter_by(id=user_id).first()
@@ -203,59 +230,112 @@ def play():
     timezone = pytz.timezone('America/New_York')
     today = datetime.now(timezone).date()
 
-    last_guess_date = user.last_correct_guess_date
-    last_incorrect_guess_date = user.last_incorrect_guess_date
+    word_pair = WordPair.query.filter_by(date_available=today).first()
+    if not word_pair:
+        return render_template('already_guessed.html')
 
-    # Prevent playing if the user has already guessed today's word pair
-    if last_guess_date == today or last_incorrect_guess_date == today:
-        print("Fetching game results...")
+    if current_user.is_authenticated:
         game_results = UserWordPair.query.filter_by(
             user_id=user_id,
+            word_pair_id=word_pair.id,
             used=True
         ).first()
 
         if game_results:
-            print("Game Results Found:", game_results)
-            print("Word 1 Status:", game_results.word1_status)
-            print("Word 2 Status:", game_results.word2_status)
+            word1_status = game_results.word1_status
+            word2_status = game_results.word2_status
 
-            def status_to_color(status):
-                if status == 'correct':
-                    return 'green'
-                elif status == 'synonym':
-                    return 'yellow'
-                else:
-                    return 'grey'
+            attempts_list = [{
+                'word1_correct': word1_status == 'correct',
+                'word1_synonym_correct': word1_status == 'synonym',
+                'word2_correct': word2_status == 'correct',
+                'word2_synonym_correct': word2_status == 'synonym'
+            }]
 
-            attempts_list = []
-            # Retrieve attempts for today
-            for i in range(game_results.attempts):
-                attempts_list.append({
-                    'word1_status': status_to_color(game_results.word1_status),
-                    'word2_status': status_to_color(game_results.word2_status)
-                })
+            hints_used = game_results.hints_used
 
             print("Attempts List:", attempts_list)
+            return render_template('already_guessed.html',
+                                   attempts_list=attempts_list,
+                                   hints_used=hints_used,
+                                   word1=word_pair.word1,
+                                   word2=word_pair.word2)
 
-            hints_used = 0  # Update this if you have a way to track hint usage
+        existing_record = UserWordPair.query.filter_by(
+            user_id=user_id,
+            word_pair_id=word_pair.id
+        ).first()
 
-            return render_template('already_guessed.html', attempts_list=attempts_list, hints_used=hints_used)
+        if not existing_record:
+            user_word_pair = UserWordPair(
+                user_id=user_id,
+                word_pair_id=word_pair.id,
+                used=False,
+                attempts=0,
+                word1_status='wrong',
+                word2_status='wrong'
+            )
+            db.session.add(user_word_pair)
+        else:
+            user_word_pair = existing_record
+            user_word_pair.used = False
 
-    # Fetch only word pairs available today and not yet used
-    available_word_pairs = UserWordPair.query.join(WordPair).filter(
-        UserWordPair.user_id == user_id,
-        UserWordPair.used == False,
-        WordPair.date_available == today
-    ).all()
+        db.session.commit()
+        attempts_used = user_word_pair.attempts
 
-    if not available_word_pairs:
-        return render_template('already_guessed.html')
+    # Check if the game was previously played and marked as 'used'
+    game_results = UserWordPair.query.filter_by(
+        user_id=user_id,
+        word_pair_id=word_pair.id,
+        used=True
+    ).first()
 
-    user_word_pair = available_word_pairs[0]
-    word_pair = WordPair.query.get(user_word_pair.word_pair_id)
+    if game_results:
+        attempts_list = []
+        attempts_list.append({
+            'word1_correct': game_results.word1_status == 'correct',
+            'word1_synonym_correct': game_results.word1_status == 'synonym',
+            'word2_correct': game_results.word2_status == 'correct',
+            'word2_synonym_correct': game_results.word2_status == 'synonym'
+        })
 
-    if not word_pair:
-        return render_template('already_guessed.html')
+        hints_used = session.get('hints_used', 0)
+        return render_template('already_guessed.html', attempts_list=attempts_list, hints_used=hints_used,
+                               word1=word_pair.word1, word2=word_pair.word2)
+
+    existing_record = db.session.query(UserWordPair).filter_by(
+        user_id=user_id,
+        word_pair_id=word_pair.id
+    ).first()
+
+    if not existing_record:
+        user_word_pair = UserWordPair(
+            user_id=user_id,
+            word_pair_id=word_pair.id,
+            used=False,
+            attempts=0,
+            word1_status='wrong',
+            word2_status='wrong'
+        )
+        db.session.add(user_word_pair)
+    else:
+        user_word_pair = existing_record
+        user_word_pair.used = False
+
+    db.session.commit()
+
+    attempts_today = UserWordPair.query.filter_by(
+        user_id=user_id,
+        word_pair_id=word_pair.id,
+        used=True
+    ).count()
+
+    attempts_used = user_word_pair.attempts
+
+    if attempts_today < 3:
+        remaining_attempts = 3 - attempts_today
+    else:
+        return render_template('already_guessed.html', word1=word_pair.word1, word2=word_pair.word2)
 
     word1 = word_pair.word1
     word2 = word_pair.word2
@@ -267,31 +347,25 @@ def play():
 
     form = CheckGuessForm()
 
-    # Initialize session variables
-    if 'attempts' not in session or session.get('word_pair_id') != user_word_pair.word_pair_id:
-        session['attempts'] = 1  # Start attempts at 1, not 0
+    if 'hints_used' not in session:
         session['hints_used'] = 0
-        session['word_pair_id'] = user_word_pair.word_pair_id
-        session['attempts_list'] = []  # Initialize attempts list
+        session['attempts_list'] = []
 
-    # Handle hint requests
     hint_requested = request.args.get('hint', 'no') == 'yes'
+
     if hint_requested:
-        session['hints_used'] = 1  # Only allow 1 hint, no matter how many times it's requested
+        session['hints_used'] += 1
 
     if form.validate_on_submit():
         user_input1 = form.user_input1.data.strip().lower()
         user_input2 = form.user_input2.data.strip().lower()
 
-        # Track which words are correct
         word1_correct = user_input1 == word1
         word2_correct = user_input2 == word2
 
-        # Check if the guessed words are synonyms
         word1_synonym_correct = user_input1 in [syn.lower() for syn in synonyms_dict[word1]]
         word2_synonym_correct = user_input2 in [syn.lower() for syn in synonyms_dict[word2]]
 
-        # Update word1_status and word2_status based on the guesses
         if word1_correct:
             user_word_pair.word1_status = 'correct'
         elif word1_synonym_correct:
@@ -306,7 +380,12 @@ def play():
         else:
             user_word_pair.word2_status = 'wrong'
 
-        # Update attempts list in session
+        user_word_pair.attempts += 1
+        db.session.commit()
+
+        attempts_used += 1
+        session['attempts'] = attempts_used
+
         attempts_list = session.get('attempts_list', [])
         attempts_list.append({
             'word1_correct': word1_correct,
@@ -316,63 +395,49 @@ def play():
         })
         session['attempts_list'] = attempts_list
 
-        # Update user_word_pair with the number of attempts and status of words
-        user_word_pair.attempts = session['attempts']
-        db.session.commit()
-
         if word1_correct and word2_correct:
             points = 2 if session['hints_used'] == 0 else 1
             flash('Correct!', 'success')
             user_word_pair.used = True
             db.session.commit()
 
-            # Update streak and points
             if current_user.is_authenticated:
                 update_user_streak(user_id, success=True)
                 user.total_points += points
                 user.last_correct_guess_date = today
                 db.session.commit()
+            else:
+                session['last_correct_guess_date'] = today
 
-            # Retrieve attempts and hints before clearing session
-            attempts_used = session.get('attempts', 1)  # Ensure attempts start from 1
             hints_used = session.get('hints_used', 0)
 
-            # Clear session variables after successful guess
             session.pop('hints_used', None)
-            session.pop('attempts', None)
-            session.pop('word_pair_id', None)
             session.pop('attempts_list', None)
 
             return render_template('correct_guess.html', points_awarded=points, attempts=attempts_used,
                                    attempts_list=attempts_list, hints_used=hints_used)
 
         else:
-            session['attempts'] += 1
-            user_word_pair.attempts = session['attempts']
-            db.session.commit()
-
-            # Handle game over after 4 attempts
-            if session['attempts'] >= 4:
+            if attempts_used >= 3:
                 flash('You have used all your attempts!', 'danger')
                 if current_user.is_authenticated:
                     update_user_streak(user_id, success=False)
                     user.last_incorrect_guess_date = today
                     user_word_pair.used = True
                     db.session.commit()
+                else:
+                    session['last_incorrect_guess_date'] = today
 
                 attempts_list = session.get('attempts_list', [])
                 hints_used = session.get('hints_used', 0)
 
                 session.pop('hints_used', None)
-                session.pop('attempts', None)
-                session.pop('word_pair_id', None)
                 session.pop('attempts_list', None)
 
                 return render_template('game_over.html', word1=word1, word2=word2,
                                        hints_used=hints_used,
                                        attempts_list=attempts_list)
 
-            # Pass information about which word (if any) was guessed correctly
             return render_template('incorrect_guess.html',
                                    word1_correct=word1_correct,
                                    word2_correct=word2_correct,
@@ -382,15 +447,14 @@ def play():
                                    user_input2=user_input2,
                                    hints_used=session['hints_used'])
 
-    # Assign synonyms based on whether hints were requested
     synonym_word1_1 = synonyms_dict[word1][0]
     synonym_word2_1 = synonyms_dict[word2][0]
+
     if session['hints_used'] > 0:
         synonym_word1_1 += f" / {synonyms_dict[word1][1]}"
         synonym_word2_1 += f" / {synonyms_dict[word2][1]}"
 
-    # Determine the progress bar class based on remaining attempts
-    remaining_attempts = 4 - session['attempts']
+    remaining_attempts = 3 - attempts_used
     progress_class = f'progress-bar-{remaining_attempts}'
 
     return render_template(
@@ -405,8 +469,8 @@ def play():
         attempts=remaining_attempts
     )
 
+
 @bp.route('/check_guess', methods=['POST'])
-@login_required
 def check_guess():
     user_input1 = request.form.get('user_input1', '').strip().lower()
     user_input2 = request.form.get('user_input2', '').strip().lower()
@@ -451,6 +515,281 @@ def check_guess():
                                word2_synonym2=word_pair.word2_synonym2)
 
     return render_template('incorrect_guess.html', hints_used=hints_used,
+                           word1_synonym1=word_pair.word1_synonym1,
+                           word1_synonym2=word_pair.word1_synonym2,
+                           word2_synonym1=word_pair.word2_synonym1,
+                           word2_synonym2=word_pair.word2_synonym2)
+
+def generate_guest_id():
+    last_guest = db.session.query(Guest).order_by(Guest.unique_guest_id.desc()).first()
+    return (last_guest.unique_guest_id + 1) if last_guest else 1
+
+@bp.route('/guest_play', methods=['POST'])
+def guest_play():
+    guest_user = Guest(unique_guest_id=generate_guest_id())
+    db.session.add(guest_user)
+    db.session.commit()
+
+    # Store guest_id in session
+    session['guest_id'] = guest_user.unique_guest_id
+
+    # Redirect to the play route
+    return redirect(url_for('auth.play'))
+
+@bp.route('/play_guest', methods=['POST', 'GET'])
+def play_guest():
+    if 'guest_id' not in session:
+        new_guest = Guest()
+        db.session.add(new_guest)
+        db.session.commit()
+
+        guest_id = new_guest.id
+        session['guest_id'] = guest_id
+    else:
+        guest_id = session['guest_id']
+
+    timezone = pytz.timezone('America/New_York')
+    today = datetime.now(timezone).date()
+
+    word_pair = WordPair.query.filter_by(date_available=today).first()
+    if not word_pair:
+        return render_template('already_guessed_as_guest.html')
+
+
+    existing_record = GuestUserWordPair.query.filter_by(
+        guest_id=guest_id,
+        word_pair_id=word_pair.id
+    ).first()
+
+    if not existing_record:
+        guest_word_pair = GuestUserWordPair(
+            guest_id=guest_id,
+            word_pair_id=word_pair.id,
+            guessed=False,
+            used=False,
+            attempts=0,
+            hints_used=0,
+            word1_status='wrong',
+            word2_status='wrong'
+        )
+        db.session.add(guest_word_pair)
+    else:
+        guest_word_pair = existing_record
+
+    db.session.commit()
+
+    word1 = word_pair.word1
+    word2 = word_pair.word2
+
+    synonyms_dict = {
+        word1: [word_pair.word1_synonym1, word_pair.word1_synonym2],
+        word2: [word_pair.word2_synonym1, word_pair.word2_synonym2]
+    }
+
+    form = CheckGuessForm()
+
+    if 'hints_used' not in session:
+        session['hints_used'] = 0
+        session['attempts_list'] = []
+
+    hint_requested = request.args.get('hint', 'no') == 'yes'
+    if hint_requested:
+        session['hints_used'] += 1
+        guest_word_pair.hints_used += 1
+        db.session.commit()
+
+    max_attempts = 3
+
+    if form.validate_on_submit():
+        user_input1 = form.user_input1.data.strip().lower()
+        user_input2 = form.user_input2.data.strip().lower()
+
+        # Check if the guesses are correct or synonyms
+        word1_correct = user_input1 == word1
+        word2_correct = user_input2 == word2
+
+        word1_synonym_correct = user_input1 in [syn.lower() for syn in
+                                                [word_pair.word1_synonym1, word_pair.word1_synonym2]]
+        word2_synonym_correct = user_input2 in [syn.lower() for syn in
+                                                [word_pair.word2_synonym1, word_pair.word2_synonym2]]
+
+        #guest_word_pair.word1_status = 'correct' if word1_correct else 'synonym' if word1_synonym_correct else 'wrong'
+        #guest_word_pair.word2_status = 'correct' if word2_correct else 'synonym' if word2_synonym_correct else 'wrong'
+
+        attempt_result = {
+            'word1_correct': word1_correct,
+            'word1_synonym_correct': word1_synonym_correct,
+            'word2_correct': word2_correct,
+            'word2_synonym_correct': word2_synonym_correct
+        }
+
+        # Append to session attempts_list
+        attempts_list = session.get('attempts_list', [])
+        attempts_list.append(attempt_result)
+        session['attempts_list'] = attempts_list
+
+        db.session.commit()
+        if word1_correct:
+            guest_word_pair.word1_status = 'correct'
+        elif word1_synonym_correct:
+            guest_word_pair.word1_status = 'synonym'
+        else:
+            guest_word_pair.word1_status = 'wrong'
+
+        if word2_correct:
+            guest_word_pair.word2_status = 'correct'
+        elif word2_synonym_correct:
+            guest_word_pair.word2_status = 'synonym'
+        else:
+            guest_word_pair.word2_status = 'wrong'
+
+        guest_word_pair.attempts += 1
+        db.session.commit()
+
+        attempts_used = guest_word_pair.attempts
+
+        if word1_correct and word2_correct:
+            points = 2 if session['hints_used'] == 0 else 1
+            #flash('Correct!', 'success')
+            guest_word_pair.used = True
+            db.session.commit()
+
+            hints_used = session.get('hints_used', 0)
+
+            session.pop('hints_used', None)
+
+            return render_template('correct_guess_as_guest.html', points_awarded=points, attempts=attempts_used,
+                                   hints_used=hints_used, attempts_list=attempts_list)
+
+        if attempts_used >= max_attempts:
+            #flash('You have used all your attempts!', 'danger')
+            guest_word_pair.used = True
+            db.session.commit()
+
+            hints_used = session.get('hints_used', 0)
+
+            attempts_list = session.get('attempts_list', [])  # Get the attempts history
+
+            session.pop('hints_used', None)
+            session.pop('attempts_list', None)
+
+            return render_template('game_over_as_guest.html', word1=word_pair.word1, word2=word_pair.word2,
+                                   hints_used=hints_used, attempts_list=attempts_list)
+
+        return render_template('incorrect_guess_as_guest.html',
+                               hints_used=session['hints_used'],
+                               word1_status=guest_word_pair.word1_status,
+                               word2_status=guest_word_pair.word2_status,
+                               user_input1=user_input1,
+                               user_input2=user_input2,
+                               word1_synonym1=word_pair.word1_synonym1,
+                               word1_synonym2=word_pair.word1_synonym2,
+                               word2_synonym1=word_pair.word2_synonym1,
+                               word2_synonym2=word_pair.word2_synonym2)
+
+    synonym_word1 = synonyms_dict[word1][0]
+    synonym_word2 = synonyms_dict[word2][0]
+    if session['hints_used'] > 0:
+        synonym_word1 += f" / {synonyms_dict[word1][1]}"
+        synonym_word2 += f" / {synonyms_dict[word2][1]}"
+
+    remaining_attempts = max_attempts - guest_word_pair.attempts
+
+
+    return render_template(
+        'play_as_guest.html',
+        form=form,
+        word1=word_pair.word1,
+        word2=word_pair.word2,
+        synonym_word1=synonym_word1,
+        synonym_word2=synonym_word2,
+        attempts=remaining_attempts,
+        hints_used=session.get('hints_used', 0)
+    )
+
+
+@bp.route('/get_hint_as_guest', methods=['GET'])
+def get_hint_as_guest():
+    if 'hints_used' not in session:
+        session['hints_used'] = 0
+
+    # Increment the hint usage
+    session['hints_used'] += 1
+
+    return redirect(url_for('auth.play_guest', hint='yes'))
+
+@bp.route('/check_guess_as_guest', methods=['POST'])
+def check_guess_as_guest():
+    user_input1 = request.form.get('user_input1', '').strip().lower()
+    user_input2 = request.form.get('user_input2', '').strip().lower()
+
+    # Fetch the guest ID and retrieve the word pair
+    guest_id = session.get('guest_id')
+    word_pair = WordPair.query.filter_by(date_available=datetime.now(pytz.timezone('America/New_York')).date()).first()
+
+    # Debugging - Check if word pair is retrieved
+    if not word_pair:
+        print("No word pair found for today.")
+        return render_template('incorrect_guess_as_guest.html', hints_used=session.get('hints_used', 0))
+
+    word1_correct = user_input1 == word_pair.word1.lower()
+    word2_correct = user_input2 == word_pair.word2.lower()
+
+    word1_synonyms = [word_pair.word1_synonym1.lower(), word_pair.word1_synonym2.lower()]
+    word2_synonyms = [word_pair.word2_synonym1.lower(), word_pair.word2_synonym2.lower()]
+
+    word1_synonym_correct = user_input1 in word1_synonyms
+    word2_synonym_correct = user_input2 in word2_synonyms
+
+    guest_word_pair = GuestUserWordPair.query.filter_by(guest_id=guest_id, word_pair_id=word_pair.id).first()
+
+    # Debugging - Check guest word pair status before updating
+    print(
+        f"Current statuses before update: word1_status: {guest_word_pair.word1_status}, word2_status: {guest_word_pair.word2_status}")
+
+    guest_word_pair.word1_status = 'correct' if word1_correct else 'synonym' if word1_synonym_correct else 'wrong'
+    guest_word_pair.word2_status = 'correct' if word2_correct else 'synonym' if word2_synonym_correct else 'wrong'
+
+    # Debugging - Check guest word pair status after updating
+    print(
+        f"Updated statuses: word1_status: {guest_word_pair.word1_status}, word2_status: {guest_word_pair.word2_status}")
+
+    # Increment the attempts in the database
+    guest_word_pair.attempts += 1
+    db.session.commit()
+
+    attempts_used = guest_word_pair.attempts
+    hints_used = session.get('hints_used', 0)
+
+    if word1_correct and word2_correct:
+        points = 2 if hints_used == 0 else 1
+        flash('Correct!', 'success')
+
+        guest_word_pair.used = True
+        db.session.commit()
+
+        session.pop('hints_used', None)
+
+        return render_template('correct_guess_as_guest.html', points_awarded=points, attempts=attempts_used,
+                               hints_used=hints_used)
+
+    max_attempts = 3
+    if attempts_used >= max_attempts:
+        flash('You have used all your attempts!', 'danger')
+        guest_word_pair.used = True
+        db.session.commit()
+
+        session.pop('hints_used', None)  # Clear hints used
+
+        return render_template('game_over_as_guest.html', word1=word_pair.word1, word2=word_pair.word2,
+                               hints_used=hints_used)
+
+    return render_template('incorrect_guess_as_guest.html',
+                           hints_used=hints_used,
+                           word1_status=guest_word_pair.word1_status,
+                           word2_status=guest_word_pair.word2_status,
+                           user_input1=user_input1,
+                           user_input2=user_input2,
                            word1_synonym1=word_pair.word1_synonym1,
                            word1_synonym2=word_pair.word1_synonym2,
                            word2_synonym1=word_pair.word2_synonym1,

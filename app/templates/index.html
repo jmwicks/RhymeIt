@@ -9,18 +9,26 @@
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
 </head>
 <body>
-    <div class="content-container">
+    <div class="content-container text-center">
         <h1>Welcome to RhymeIt:</h1>
         <h2>Your Daily Rhyming Game!</h2>
+
         <!-- Login Form -->
         <form method="POST" action="{{ url_for('auth.login') }}" class="mb-3">
             {{ login_form.hidden_tag() }}
             <button type="submit" class="btn btn-success">Click here to Login!</button>
         </form>
+
         <!-- Registration Form -->
-        <form method="POST" action="{{ url_for('auth.register') }}">
+        <form method="POST" action="{{ url_for('auth.register') }}" class="mb-3">
             {{ register_form.hidden_tag() }}
             <button type="submit" class="btn btn-primary">New user? Register now!</button>
+        </form>
+
+        <!-- Play as Guest Button -->
+        <form method="POST" action="{{ url_for('auth.play_guest') }}">
+            {{ guest_form.hidden_tag() }}
+            <button type="submit" class="btn btn-warning" name="play_as_guest">Play as Guest</button>
         </form>
     </div>
 </body>

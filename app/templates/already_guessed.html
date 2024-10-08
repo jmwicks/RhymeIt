@@ -18,43 +18,31 @@
         .circle.yellow { background-color: royalblue; }
         .circle.grey { background-color: grey; }
         .attempt {
-            display: flex;
-            align-items: center;
-            justify-content: center;
             margin-bottom: 10px;
         }
-        .attempt-container {
-            text-align: center;
-        }
-        .content-container {
-            text-align: center;
-        }
-
     </style>
 </head>
 <body>
     <div class="content-container">
-        <h1>You've Already Guessed!</h1>
-        <p>Check back tomorrow for a new word pair!</p>
+        <h1>Already Guessed</h1>
+        <p><strong>You already guessed today's word pair!</strong></p>
 
-        <!--{% if attempts_list %}
-            <h2>Today's Results:</h2>
-            <div class="attempt-container">
-                {% for attempt in attempts_list %}
-                    <div class="attempt">
-                        <div class="circle {{ attempt.word1_status }}"></div>
-                        <div class="circle {{ attempt.word2_status }}"></div>
-                    </div>
-                {% endfor %}
+        <p>The correct words were:</p>
+        <ul>
+            <li><strong style="text-transform: capitalize; font-size: 1.4em;">{{ word1|capitalize }}</strong></li>
+            <li><strong style="text-transform: capitalize; font-size: 1.4em;">{{ word2|capitalize }}</strong></li>
+        </ul>
+
+        <!-- {% for attempt in attempts_list %}
+            <div class="attempt">
+                <div class="circle {{ 'green' if attempt['word1_correct'] else 'yellow' if attempt['word1_synonym_correct'] else 'grey' }}"></div>
+                <div class="circle {{ 'green' if attempt['word2_correct'] else 'yellow' if attempt['word2_synonym_correct'] else 'grey' }}"></div>
             </div>
-            {% if hints_used > 0 %}
-                <p>You used {{ hints_used }} hint{{ '' if hints_used == 1 else 's' }}.</p>
-            {% else %}
-                <p>You didn't use any hints.</p>
-            {% endif %}
-        {% endif %}-->
+        {% endfor %}-->
 
-        <a href="{{ url_for('auth.dashboard') }}" class="btn btn-info">Go to Dashboard</a>
+        <form action="{{ url_for('auth.dashboard') }}" method="get">
+            <button class="btn btn-info w-100">Go to Dashboard</button>
+        </form><br>
     </div>
 </body>
 </html>

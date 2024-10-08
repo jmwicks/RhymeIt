@@ -1,4 +1,5 @@
 from sqlalchemy import func
+from sqlalchemy.dialects.postgresql import JSON
 from datetime import datetime
 from flask_login import UserMixin
 from app import db, login_manager
@@ -82,10 +83,21 @@ class WordPair(db.Model):
     word2_synonym2 = db.Column(db.String(100), nullable=False)
     used = db.Column(db.Boolean, default=False)
     date_available = db.Column(db.Date, nullable=False)
+
     user_word_pairs = db.relationship('UserWordPair', back_populates='word_pair', lazy=True)
+    guest_word_pairs = db.relationship('GuestUserWordPair', back_populates='word_pair', lazy=True)
 
     def __repr__(self):
         return f'<WordPair {self.word1} - {self.word2}>'
+
+class Guest(db.Model):
+    __tablename__ = 'guest'
+    id = db.Column(db.Integer, primary_key=True)
+    guest_word_pairs = db.relationship('GuestUserWordPair', back_populates='guest', lazy=True)
+
+    def __repr__(self):
+        return f"<Guest id={self.id}>"
+
 
 class UserWordPair(db.Model):
     __tablename__ = 'user_word_pair'
@@ -94,14 +106,36 @@ class UserWordPair(db.Model):
     guessed = db.Column(db.Boolean, default=False)
     used = db.Column(db.Boolean, default=False)
     attempts = db.Column(db.Integer, default=0, nullable=False)
+    hints_used = db.Column(db.Integer, default=0, nullable=False)
 
-    word1_status = db.Column(db.String(10), default='wrong')  # correct, synonym, wrong
-    word2_status = db.Column(db.String(10), default='wrong')  # correct, synonym, wrong
+    word1_status = db.Column(db.String(10), default='wrong')
+    word2_status = db.Column(db.String(10), default='wrong')
 
     user = db.relationship('User', back_populates='user_word_pairs')
     word_pair = db.relationship('WordPair', back_populates='user_word_pairs')
 
+
+class GuestUserWordPair(db.Model):
+    __tablename__ = 'guest_user_word_pair'
+    guest_id = db.Column(db.Integer, db.ForeignKey('guest.id'), primary_key=True)
+    word_pair_id = db.Column(db.Integer, db.ForeignKey('word_pair.id'), primary_key=True)
+    guessed = db.Column(db.Boolean, default=False)
+    used = db.Column(db.Boolean, default=False)
+    attempts = db.Column(db.Integer, default=0, nullable=False)
+    hints_used = db.Column(db.Integer, default=0, nullable=False)
+
+    word1_status = db.Column(db.String(10), default='wrong')
+    word2_status = db.Column(db.String(10), default='wrong')
+
+    guest = db.relationship('Guest', back_populates='guest_word_pairs')
+    word_pair = db.relationship('WordPair', back_populates='guest_word_pairs')
+
+    def __repr__(self):
+        return f"<GuestUserWordPair guest_id={self.guest_id}, word_pair_id={self.word_pair_id}>"
+
+
 class UserStats(db.Model):
+    __tablename__ = 'user_stats'
     id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.Date, nullable=False, default=func.current_date())
     puzzles_solved = db.Column(db.Integer, default=0)
@@ -109,3 +143,8 @@ class UserStats(db.Model):
     points_earned = db.Column(db.Integer, default=0)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     user = db.relationship('User', back_populates='stats')
+
+    first_try_successes = db.Column(db.Integer, default=0)
+    total_tries = db.Column(db.Integer, default=0)
+    hints_used = db.Column(db.Integer, default=0)
+    total_puzzles_played = db.Column(db.Integer, default=0)
