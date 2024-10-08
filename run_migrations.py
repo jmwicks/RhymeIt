@@ -1,4 +1,5 @@
 from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from alembic.config import Config
 from alembic import command
@@ -7,11 +8,13 @@ import os
 # Create a Flask application instance
 app = Flask(__name__)
 
-# Configure your app here (e.g., app.config.from_object('config'))
+# Set the database URL from the environment variable
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Initialize Flask-Migrate
-migrate = Migrate(app)
+# Initialize database and migrate
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 
 # Create Alembic config
 alembic_cfg = Config("migrations/alembic.ini")
