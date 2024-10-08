@@ -1,12 +1,21 @@
-import os
+from flask import Flask
+from flask_migrate import Migrate
 from alembic.config import Config
 from alembic import command
+import os
 
-# Create an Alembic Config object and specify the path to alembic.ini
-alembic_cfg = Config('migrations/alembic.ini')  # Adjust path if needed
+# Create a Flask application instance
+app = Flask(__name__)
 
-# Set the sqlalchemy.url from the environment variable
-alembic_cfg.set_main_option('sqlalchemy.url', os.getenv('DATABASE_URL'))
+# Configure your app here (e.g., app.config.from_object('config'))
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
 
-# Run the upgrade command to apply migrations
-command.upgrade(alembic_cfg, 'head')
+# Initialize Flask-Migrate
+migrate = Migrate(app)
+
+# Create Alembic config
+alembic_cfg = Config("migrations/alembic.ini")
+
+# Use application context to run the migration
+with app.app_context():
+    command.upgrade(alembic_cfg, 'head')
