@@ -193,9 +193,16 @@ def dashboard():
     hints_used = sum(stat.hints_used for stat in user_stats)
     total_puzzles_played = sum(stat.total_puzzles_played for stat in user_stats)
 
+    two_tries_count = UserWordPair.query.filter_by(user_id=user.id, attempts=2).count()
+    three_tries_count = UserWordPair.query.filter_by(user_id=user.id, attempts=3).count()
+    perfect_count = UserWordPair.query.filter_by(user_id=user.id, attempts=1).count()
+
+    perfect_percentage = (perfect_count / total_puzzles_played * 100) if total_puzzles_played > 0 else 0
+    two_tries_percentage = (two_tries_count / total_puzzles_played * 100) if total_puzzles_played > 0 else 0
+    three_tries_percentage = (three_tries_count / total_puzzles_played * 100) if total_puzzles_played > 0 else 0
+
     return render_template('dashboard.html',
                            user=user,
-                           user_stats=user_stats,
                            total_points=total_points,
                            current_streak=current_streak,
                            max_streak=max_streak,
@@ -203,6 +210,12 @@ def dashboard():
                            total_tries=total_tries,
                            hints_used=hints_used,
                            total_puzzles_played=total_puzzles_played,
+                           two_tries_count=two_tries_count,
+                           three_tries_count=three_tries_count,
+                           perfect_count=perfect_count,
+                           perfect_percentage=perfect_percentage,
+                           two_tries_percentage=two_tries_percentage,
+                           three_tries_percentage=three_tries_percentage,
                            form=form)
 
 @bp.route("/logout", methods=["POST"])
