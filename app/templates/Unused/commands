@@ -1,0 +1,13 @@
+cd C:\Users\Jason\PycharmProjects\RhymeTime
+
+heroku login
+heroku run python import_data.py --app rhymeit
+
+heroku run flask db upgrade --app rhymeit
+
+git status
+git add .
+git commit -m "xx"
+git push origin main
+
+git pull origin main (to get the changes from github if shared)
