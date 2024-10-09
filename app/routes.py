@@ -101,7 +101,6 @@ def register():
 
     return render_template('register.html', form=form)
 
-
 @bp.route("/login", methods=['GET', 'POST'])
 def login():
     form = LoginForm()
@@ -199,12 +198,11 @@ def logout():
     if current_user.is_authenticated:
         logout_user()
 
-    session.clear()  # Clears session data
+    #session.clear()  # Clears session data
     flash('You have been logged out.', 'success')
-    session.pop('_permanent', None)  # Ensure permanent session flag is removed
+    #session.pop('_permanent', None)
 
     return redirect(url_for('auth.login'))
-
 
 @bp.route('/get_hint', methods=['GET'])
 def get_hint():
@@ -215,7 +213,6 @@ def get_hint():
     session['hints_used'] += 1
 
     return redirect(url_for('auth.play', hint='yes'))
-
 
 @bp.route('/play', methods=['POST', 'GET'])
 @login_required
@@ -254,7 +251,6 @@ def play():
 
             hints_used = game_results.hints_used
 
-            print("Attempts List:", attempts_list)
             return render_template('already_guessed.html',
                                    attempts_list=attempts_list,
                                    hints_used=hints_used,
@@ -283,7 +279,6 @@ def play():
         db.session.commit()
         attempts_used = user_word_pair.attempts
 
-    # Check if the game was previously played and marked as 'used'
     game_results = UserWordPair.query.filter_by(
         user_id=user_id,
         word_pair_id=word_pair.id,
@@ -468,7 +463,6 @@ def play():
         progress_class=progress_class,
         attempts=remaining_attempts
     )
-
 
 @bp.route('/check_guess', methods=['POST'])
 def check_guess():
@@ -706,7 +700,6 @@ def play_guest():
         attempts=remaining_attempts,
         hints_used=session.get('hints_used', 0)
     )
-
 
 @bp.route('/get_hint_as_guest', methods=['GET'])
 def get_hint_as_guest():
