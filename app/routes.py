@@ -6,8 +6,10 @@ import random
 from flask import render_template, request, redirect, url_for, flash, Blueprint, current_app, session, make_response, \
     get_flashed_messages
 from flask_login import login_user, logout_user, current_user, login_required
+from sqlalchemy import func
+
 from app import db
-from app.models import User, WordPair, UserWordPair, Guest, GuestUserWordPair
+from app.models import User, WordPair, UserWordPair, Guest, GuestUserWordPair, UserStats
 from app.forms import RegistrationForm, LoginForm, ResetPasswordRequestForm, ResetPasswordForm, CheckGuessForm, GuestForm
 from app.utils import send_reset_email, create_token, update_user_streak
 import logging
@@ -179,18 +181,28 @@ def confirmation():
 @bp.route('/dashboard')
 def dashboard():
     user = current_user
-    form = LogoutForm()  # Instantiate the LogoutForm
+    user_stats = UserStats.query.filter_by(user_id=user.id).all()
+    form = LogoutForm()
 
-    # Calculate total points, current streak, and max streak
     total_points = sum(stat.points_earned for stat in user.stats)
     current_streak = user.current_streak
     max_streak = user.max_streak
 
+    first_try_successes = sum(stat.first_try_successes for stat in user_stats)
+    total_tries = sum(stat.total_tries for stat in user_stats)
+    hints_used = sum(stat.hints_used for stat in user_stats)
+    total_puzzles_played = sum(stat.total_puzzles_played for stat in user_stats)
+
     return render_template('dashboard.html',
                            user=user,
+                           user_stats=user_stats,
                            total_points=total_points,
                            current_streak=current_streak,
                            max_streak=max_streak,
+                           first_try_successes=first_try_successes,
+                           total_tries=total_tries,
+                           hints_used=hints_used,
+                           total_puzzles_played=total_puzzles_played,
                            form=form)
 
 @bp.route("/logout", methods=["POST"])
@@ -213,6 +225,39 @@ def get_hint():
     session['hints_used'] += 1
 
     return redirect(url_for('auth.play', hint='yes'))
+
+
+def update_user_stats(user, attempts, correct_guess, hints_requested):
+    # Check if UserStats entry exists for today
+    user_stats = UserStats.query.filter_by(user_id=user.id, date=func.current_date()).first()
+
+    if not user_stats:
+        # If no stats entry exists for today, create a new one
+        user_stats = UserStats(
+            user_id=user.id,
+            puzzles_solved=0,
+            puzzles_failed=0,
+            points_earned=0,
+            first_try_successes=0,
+            total_tries=0,
+            hints_used=0,
+            total_puzzles_played=0
+        )
+        db.session.add(user_stats)
+        db.session.commit()
+
+    # Update the stats as needed
+    user_stats.total_puzzles_played += 1
+    if correct_guess:
+        user_stats.puzzles_solved += 1
+        if attempts == 1 and hints_requested == 0:
+            user_stats.first_try_successes += 1
+    else:
+        user_stats.puzzles_failed += 1
+
+    user_stats.hints_used += hints_requested
+
+    db.session.commit()
 
 @bp.route('/play', methods=['POST', 'GET'])
 @login_required
@@ -397,6 +442,12 @@ def play():
             db.session.commit()
 
             if current_user.is_authenticated:
+                if attempts_used == 1:
+                    update_user_stats(user, attempts=1, correct_guess=True, hints_requested=session['hints_used'])
+                else:
+                    update_user_stats(user, attempts=attempts_used, correct_guess=True,
+                                      hints_requested=session['hints_used'])
+
                 update_user_streak(user_id, success=True)
                 user.total_points += points
                 user.last_correct_guess_date = today
@@ -415,7 +466,10 @@ def play():
         else:
             if attempts_used >= 3:
                 flash('You have used all your attempts!', 'danger')
+
                 if current_user.is_authenticated:
+                    update_user_stats(user, attempts=attempts_used, correct_guess=False,
+                                      hints_requested=session['hints_used'])
                     update_user_streak(user_id, success=False)
                     user.last_incorrect_guess_date = today
                     user_word_pair.used = True

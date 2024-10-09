@@ -4,21 +4,33 @@
     <div class="content-container">
         <h2>Welcome, {{ user.username }}!</h2>
 
-        <p>Your Puzzle Stats:</p>
+        <p><strong>Your Puzzle Stats:</strong></p>
         <ul class="dashboard-stats">
-            <li>Current Streak: {{ current_streak }} days</li>
-            <li>Max Streak: {{ max_streak }} days</li>
+            <li>
+                <strong style="color: forestgreen;">Current Streak:</strong>
+                {{ current_streak }}
+                {{ 'day' if current_streak == 1 else 'days' }}
+            </li>
+            <li>
+                <strong style="color: forestgreen;">Max Streak:</strong>
+                {{ max_streak }}
+                {{ 'day' if max_streak == 1 else 'days' }}
+            </li><br>
+            <li><strong style= "color: forestgreen;">Perfect First Guesses:</strong> {{ first_try_successes }}</li>
+            <!--<li>Total Tries: {{ total_tries }}</li>-->
+            <!--<li>Total Hints Used: {{ hints_used }}</li>-->
+            <li><strong style= "color: forestgreen;">Total Puzzles Played:</strong> {{ total_puzzles_played }}</li>
         </ul>
 
-        <ul>
-            {% for stat in user.stats %}
+        <!--<ul>
+            {% for stat in user_stats %}
                 <li>Date: {{ stat.date }},
                     Solved: {{ stat.puzzles_solved }},
                     Failed: {{ stat.puzzles_failed }},
                     Points Earned: {{ stat.points_earned }}
                 </li>
             {% endfor %}
-        </ul>
+        </ul>-->
 
         <div class="d-flex flex-column mt-4">
             <a href="{{ url_for('auth.play') }}" class="btn btn-primary mb-2">Play</a>
