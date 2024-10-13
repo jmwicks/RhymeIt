@@ -29,11 +29,11 @@
         {% endif %}
 
         {% if word2_status == 'correct' %}
-            <p><strong style="font-size: 1.2em; color: forestgreen;">Your first guess: {{ user_input2|capitalize }} is correct!</strong></p>
+            <p><strong style="font-size: 1.2em; color: forestgreen;">Your second guess: {{ user_input2|capitalize }} is correct!</strong></p>
         {% elif word2_status == 'synonym' %}
-            <p><strong style="font-size: 1.2em; color: royalblue;">Your first guess: {{ user_input2|capitalize }} is actually the other clue for this word! You're on the right track.</strong></p>
+            <p><strong style="font-size: 1.2em; color: royalblue;">Your second guess: {{ user_input2|capitalize }} is actually the other clue for this word! You're on the right track.</strong></p>
         {% else %}
-            <p><strong style="font-size: 1.2em; color: darkred;">Your first guess: {{ user_input2|capitalize }} is incorrect.</strong></p>
+            <p><strong style="font-size: 1.2em; color: darkred;">Your second guess: {{ user_input2|capitalize }} is incorrect.</strong></p>
         {% endif %}
 
 

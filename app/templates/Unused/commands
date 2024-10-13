@@ -11,3 +11,8 @@ git commit -m "xx"
 git push origin main
 
 git pull origin main (to get the changes from github if shared)
+
+UPDATE word_pair
+SET word2_synonym1 = 'hour',
+    word2_synonym2 = 'rhythm'
+WHERE word1 = 'chime' AND word2 = 'time' AND date_available = '2024-11-17';
