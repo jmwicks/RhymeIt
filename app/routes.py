@@ -526,6 +526,8 @@ def play():
         form=form,
         synonym_word1=synonym_word1_1,
         synonym_word2=synonym_word2_1,
+        word1_status=user_word_pair.word1_status,
+        word2_status=user_word_pair.word2_status,
         already_guessed=False,
         progress_class=progress_class,
         attempts=remaining_attempts
@@ -665,7 +667,6 @@ def play_guest():
         user_input1 = form.user_input1.data.strip().lower()
         user_input2 = form.user_input2.data.strip().lower()
 
-        # Check if the guesses are correct or synonyms
         word1_correct = user_input1 == word1
         word2_correct = user_input2 == word2
 
@@ -764,6 +765,8 @@ def play_guest():
         word2=word_pair.word2,
         synonym_word1=synonym_word1,
         synonym_word2=synonym_word2,
+        word1_status=guest_word_pair.word1_status,
+        word2_status=guest_word_pair.word2_status,
         attempts=remaining_attempts,
         hints_used=session.get('hints_used', 0)
     )

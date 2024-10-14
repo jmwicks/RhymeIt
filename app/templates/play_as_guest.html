@@ -148,19 +148,35 @@
             <form action="{{ url_for('auth.play_guest') }}" method="post">
                 {{ form.hidden_tag() }}
                 <label for="user_input1">First word:</label>
-                <input type="text" id="user_input1" name="user_input1" required>
+                <input type="text" id="user_input1" name="user_input1" value="" required>
 
                 <label for="user_input2">Second word:</label>
-                <input type="text" id="user_input2" name="user_input2" required>
+                <input type="text" id="user_input2" name="user_input2" value="" required>
 
                 <input type="hidden" name="word1" value="{{ word1 }}">
                 <input type="hidden" name="word2" value="{{ word2 }}">
                 <input type="hidden" name="hints_used" value="{{ hints_used | default(0) }}">
 
-
                 <button class="btn btn-primary w-100">Submit</button>
             </form>
         </div>
+
+        <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Pre-fill the fields without disabling them
+            var word1_status = "{{ word1_status }}";
+            var word2_status = "{{ word2_status }}";
+
+            if (word1_status === "correct") {
+                document.getElementById('user_input1').value = "{{ word1 }}";
+            }
+
+            if (word2_status === "correct") {
+                document.getElementById('user_input2').value = "{{ word2 }}";
+            }
+        });
+        </script>
+
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"></script>
 

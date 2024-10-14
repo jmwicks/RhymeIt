@@ -100,7 +100,6 @@
         <p>Synonym of word 1: <br><strong style="text-transform: capitalize; font-size: 1.7em;">{{ synonym_word1 }}</strong></p>
         <p>Synonym of word 2: <br><strong style="text-transform: capitalize; font-size: 1.7em;">{{ synonym_word2 }}</strong></p>
 
-
         <!-- Display Progress Bar -->
         <div class="progress-container">
             <div class="progress-bar {{ 'green' if attempts == 3 else 'yellow' if attempts == 2 else 'red' }}">
@@ -111,11 +110,12 @@
         <div class="form-container">
             <form action="{{ url_for('auth.play') }}" method="post">
                 {{ form.hidden_tag() }}
+
                 <label for="user_input1">First word:</label>
-                <input type="text" id="user_input1" name="user_input1" required>
+                <input type="text" id="user_input1" name="user_input1" value="" required>
 
                 <label for="user_input2">Second word:</label>
-                <input type="text" id="user_input2" name="user_input2" required>
+                <input type="text" id="user_input2" name="user_input2" value="" required>
 
                 <input type="hidden" name="word1" value="{{ word1 }}">
                 <input type="hidden" name="word2" value="{{ word2 }}">
@@ -129,6 +129,23 @@
             <a href="{{ url_for('auth.dashboard') }}" class="btn btn-info text-white w-100">Go to Dashboard</a>
         </div>
     </div>
+
+    <!-- JavaScript to auto-fill the input fields -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Pre-fill the fields without disabling them
+            var word1_status = "{{ word1_status }}";
+            var word2_status = "{{ word2_status }}";
+
+            if (word1_status === "correct") {
+                document.getElementById('user_input1').value = "{{ word1 }}";
+            }
+
+            if (word2_status === "correct") {
+                document.getElementById('user_input2').value = "{{ word2 }}";
+            }
+        });
+    </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kaKTk0XPO7kM8qWkM+TmA7CvZ9ZX4Q9tkjOHqUjHl0cG7p8+2LqF4oG4I8L05X3a" crossorigin="anonymous"></script>
 </body>
