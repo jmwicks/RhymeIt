@@ -22,13 +22,15 @@ Copyright pending.-->
                 {{ 'day' if max_streak == 1 else 'days' }}
             </li><br>
             <li><strong style="color: forestgreen;">Perfect Guesses:</strong> {{ perfect_count }}
-                ({{ perfect_percentage | int }}%)
+                ({{ (perfect_percentage | round(0)) | int }}%)
             </li>
             <li><strong style="color: forestgreen;">Two Tries:</strong> {{ two_tries_count }}
-                ({{ two_tries_percentage | int }}%)
+                ({{ (two_tries_percentage | round(0)) | int }}%)
             </li>
             <li><strong style="color: forestgreen;">Three Tries:</strong> {{ three_tries_count }}
-                ({{ three_tries_percentage | int }}%) <br><br>
+                ({{ (three_tries_percentage | round(0)) | int }}%) <br><br>
+
+
 
             <!--<li>Total Tries: {{ total_tries }}</li>-->
             <!--<li>Total Hints Used: {{ hints_used }}</li>-->
