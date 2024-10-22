@@ -1,3 +1,8 @@
+# Copyright (c) 2024 Jason Wicks
+# All rights reserved.
+#
+# Copyright pending.
+
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate

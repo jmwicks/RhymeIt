@@ -1,3 +1,8 @@
+# Copyright (c) 2024 Jason Wicks
+# All rights reserved.
+#
+# Copyright pending.
+
 from sqlalchemy import func
 from sqlalchemy.dialects.postgresql import JSON
 from datetime import datetime

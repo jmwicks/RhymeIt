@@ -1,3 +1,8 @@
+<!--Copyright (c) 2024 Jason Wicks
+All rights reserved.
+
+Copyright pending.-->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -21,26 +26,28 @@
 </head>
 <body>
     <div class="content-container text-center">
-        <h1>Welcome to RhymeIt:</h1>
-        <h2>Your Daily Rhyming Game!</h2>
+        <h1 style="font-family: 'Raleway'; color: #007BFF; text-shadow: 2px 2px 5px #aaa; font-size: 45px;">Welcome to <strong>RhymeIt</strong>:</h1>
+        <h2 style="font-family: 'Raleway'; color: #28a745; text-shadow: 1px 1px 3px #888; font-size: 30px;">Your Daily Rhyming Game!</h2>
+
 
         <!-- Login Form -->
-        <form method="POST" action="{{ url_for('auth.login') }}" class="mb-3">
+        <br><form method="POST" action="{{ url_for('auth.login') }}" class="mb-3">
             {{ login_form.hidden_tag() }}
-            <button type="submit" class="btn btn-success">Click here to Login!</button>
+            <button type="submit" class="btn btn-success" style="width: 220px;">Click here to Login!</button>
         </form>
 
         <!-- Registration Form -->
         <form method="POST" action="{{ url_for('auth.register') }}" class="mb-3">
             {{ register_form.hidden_tag() }}
-            <button type="submit" class="btn btn-primary">New user? Register now!</button>
+            <button type="submit" class="btn btn-primary" style="width: 220px;">New user? Register now!</button>
         </form>
 
         <!-- Play as Guest Button -->
         <form method="POST" action="{{ url_for('auth.play_guest') }}">
             {{ guest_form.hidden_tag() }}
-            <button type="submit" class="btn btn-warning" name="play_as_guest">Play as Guest</button>
-        </form>
+            <button type="submit" class="btn btn-warning" name="play_as_guest" style="width: 220px;">Play as Guest</button>
+        </form><br>
+        © 2024 Jason Wicks
     </div>
 </body>
 </html>

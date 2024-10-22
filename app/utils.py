@@ -1,3 +1,8 @@
+# Copyright (c) 2024 Jason Wicks
+# All rights reserved.
+#
+# Copyright pending.
+
 from flask_mail import Message
 from flask import url_for
 from app import mail, db

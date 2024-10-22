@@ -1,3 +1,8 @@
+# Copyright (c) 2024 Jason Wicks
+# All rights reserved.
+#
+# Copyright pending.
+
 import os
 from datetime import timedelta
 

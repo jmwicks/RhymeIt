@@ -1,3 +1,8 @@
+# Copyright (c) 2024 Jason Wicks
+# All rights reserved.
+#
+# Copyright pending.
+
 from app import create_app, db
 from app.models import User, UserWordPair, WordPair
 

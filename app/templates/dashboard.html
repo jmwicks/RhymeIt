@@ -1,3 +1,8 @@
+<!--Copyright (c) 2024 Jason Wicks
+All rights reserved.
+
+Copyright pending.-->
+
 {% extends "base.html" %}
 {% block title %}Dashboard{% endblock %}
 {% block content %}
@@ -17,13 +22,14 @@
                 {{ 'day' if max_streak == 1 else 'days' }}
             </li><br>
             <li><strong style="color: forestgreen;">Perfect Guesses:</strong> {{ perfect_count }}
-                ({{ perfect_percentage | round(2) }}%)
+                ({{ perfect_percentage | int }}%)
             </li>
             <li><strong style="color: forestgreen;">Two Tries:</strong> {{ two_tries_count }}
-                ({{ two_tries_percentage | round(2) }}%)
+                ({{ two_tries_percentage | int }}%)
             </li>
             <li><strong style="color: forestgreen;">Three Tries:</strong> {{ three_tries_count }}
-                ({{ three_tries_percentage | round(2) }}%) <br><br>
+                ({{ three_tries_percentage | int }}%) <br><br>
+
             <!--<li>Total Tries: {{ total_tries }}</li>-->
             <!--<li>Total Hints Used: {{ hints_used }}</li>-->
             <li><strong style= "color: forestgreen;">Total Puzzles Played:</strong> {{ total_puzzles_played }}</li>
@@ -48,6 +54,7 @@
             </form>
             <p class="contact-info">To provide questions, concerns, comments, or compliments (or just joy), email me at
                 <a href="mailto:rhyme.it.manager@gmail.com">rhyme.it.manager@gmail.com</a>.</p>
+            © 2024 Jason Wicks
         </div>
 
         <!-- Modal for instructions -->

@@ -1,3 +1,8 @@
+# Copyright (c) 2024 Jason Wicks
+# All rights reserved.
+#
+# Copyright pending.
+
 from app import db
 from sqlalchemy.exc import SQLAlchemyError
 from app.models import User
